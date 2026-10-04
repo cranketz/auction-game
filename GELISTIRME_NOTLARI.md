@@ -23,6 +23,6 @@ Depo bağlantısı belirlendikten sonra tamamlanan her anlamlı güncellemede il
 
 Bu işlem mevcut çalışma sırasında yapılır; sohbet dışında kendiliğinden dosya izleme veya zamanlanmış görev oluşturulmaz. Yeni çalışma oturumlarında bu dosya çalışma tercihini kaydeder. GitHub yüklemesi oyun sitesinin otomatik yayınlanması anlamına gelmez.
 
-## İlk depo kurulumu için eksikler
+## GitHub bağlantısı
 
-GitHub depo adresi veya yeni deponun sahibi/adı/görünürlüğü; yerel Git commit kimliği; push için yetkili bağlantı. Bu bilgiler olmadan gönderim tamamlanmış sayılmaz.
+Depo: https://github.com/cranketz/auction-game (herkese açık). Yerel main dalı origin/main dalını takip eder. Git kimliği yalnızca bu depoda cranketz ve GitHub noreply adresi olarak ayarlandı. İlk gönderim doğrulandı. Tamamlanan güncellemelerde kontrollerden sonra commit ve git push uygulanır.
