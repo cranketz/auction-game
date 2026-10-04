@@ -1,4 +1,5 @@
 import { randomInt, randomUUID } from 'node:crypto';
+import { BREAKFAST, scoreBreakfast } from './breakfast.js';
 
 export const THEMES = {
   kahvalti: { name: 'Kahvaltı', groups: ['Ekmek', 'Peynir', 'Yumurta', 'İçecek'], extras: ['Zeytin', 'Domates', 'Bal', 'Reçel'] },
@@ -18,7 +19,13 @@ export class Match {
     this.openBasic(now);
   }
   player(id) { const p = this.players.find(p => p.id === id); requireRule(p, 'Oyuncu bulunamadı.'); return p; }
-  product(group, index) { return { id: randomUUID(), group, name: `${group} • ${['Klasik', 'Özel', 'Seçkin'][index % 3]}`, points: 5 + (index % 3) * 3 }; }
+  product(group, index) {
+    if (this.theme === 'kahvalti') {
+      const pool = BREAKFAST.filter(x => x.group === group);
+      return {id:randomUUID(), ...pool[randomInt(pool.length)]};
+    }
+    return { id: randomUUID(), group, name: `${group} • ${['Klasik', 'Özel', 'Seçkin'][index % 3]}`, points: 5 + (index % 3) * 3 };
+  }
   openBasic(now) {
     this.phase = 'basic'; this.deadline = now + this.seconds * 1000; this.bids = {};
     const group = THEMES[this.theme].groups[this.round];
@@ -47,7 +54,10 @@ export class Match {
   openExtra(now) {
     this.phase = 'extra'; this.deadline = now + this.seconds * 1000; this.price = 0; this.leader = null; this.bidCount = 0;
     const groups = THEMES[this.theme].extras;
-    this.products = [this.product(groups[randomInt(groups.length)], randomInt(3))];
+    if(this.theme === 'kahvalti') {
+      const extras = BREAKFAST.filter(x=>!x.basic);
+      this.products = [{id:randomUUID(), ...extras[randomInt(extras.length)]}];
+    } else this.products = [this.product(groups[randomInt(groups.length)], randomInt(3))];
   }
   bidExtra(id, amount, now = Date.now()) {
     requireRule(this.phase === 'extra' && now < this.deadline, 'Açık artırma kapandı.');
@@ -75,6 +85,7 @@ export class Match {
     // Prototype scoring only. Production compatibility and hidden soup relations are a later milestone.
     this.results = this.players.map(p => {
       const selected = p.inventory.filter(x => (this.builds[p.id] ?? []).includes(x.id));
+      if(this.theme === 'kahvalti') return {id:p.id,name:p.name,remaining:p.basic+p.extra,selected,...scoreBreakfast(selected)};
       const unique = [...new Map(selected.map(x => [x.name,x])).values()];
       let points = unique.reduce((sum,x) => sum+x.points,0);
       const groups = new Set(selected.map(x => x.group));

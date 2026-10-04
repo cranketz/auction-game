@@ -1,6 +1,6 @@
 # Kahvaltı kataloğu ve kombinasyon taslağı
 
-Durum: Tasarım önerisi v0.1; henüz oyun motoruna uygulanmadı.
+Durum: Kullanıcı tarafından kabul edilen başlangıç tasarımı v0.1; oyun motoruna uygulandı. Sayısal denge henüz gerçek oyuncu testleriyle doğrulanmadı.
 
 ## Tasarım amacı
 
