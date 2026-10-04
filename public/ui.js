@@ -1,3 +1,4 @@
+import {computerStatus,soupStructure} from './theme-rules.js';
 const escape=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Original vector illustrations, generated locally; no third-party image requests.
 export function productArt(p){
@@ -23,7 +24,20 @@ export function buildBoard(theme,inventory,ids,locked){
 }
 export function scoreChart(result){
  const b=result.breakdown;
- const rows=b?[['Ürün katkısı',b.base],['Temel set',b.completeness],['Çeşitlilik',b.diversity],['İkili uyumlar',b.pairPoints],['Üçlü uyumlar',b.triplePoints]]:[['Toplam katkı',result.points]];
- const max=Math.max(1,...rows.map(x=>x[1]));
- return `<div class="score-chart" aria-label="${escape(result.name)} puan dağılımı"><h3>${escape(result.name)} · Puan katkıları</h3>${rows.map(([label,value])=>`<div><span>${label}</span><div class="bar-track"><div style="width:${value/max*100}%"></div></div><strong>${value}</strong></div>`).join('')}</div>`;
+ const rows=b?.type==='computer'?[['Çalışan parçalar',b.base],['Uyumlu çekirdek',b.coreBonus],['Tam sistem',b.completeness]]:b?.type==='soup'?[['Malzemeler',b.base],['Geçerli yapı',b.completeness],['İkili uyumlar',b.pairPoints],['Üçlü uyumlar',b.triplePoints]]:b?[['Ürün katkısı',b.base],['Temel set',b.completeness],['Çeşitlilik',b.diversity],['İkili uyumlar',b.pairPoints],['Üçlü uyumlar',b.triplePoints]]:[['Toplam katkı',result.points]];
+ const max=Math.max(1,...rows.map(x=>Math.abs(x[1])));
+ return `<div class="score-chart" aria-label="${escape(result.name)} puan dağılımı"><h3>${escape(result.name)} · Puan katkıları</h3>${rows.map(([label,value])=>`<div><span>${label}</span><div class="bar-track"><div ${value<0?'class="negative"':''} style="width:${Math.abs(value)/max*100}%"></div></div><strong>${value}</strong></div>`).join('')}</div>`;
+}
+export function preparationHint(theme,selected){
+ if(theme==='corba')return `<p class="theme-status">${soupStructure(selected)?'✓ Sıvı ve ana malzeme var. Gizli uyumlar sonuçta açılır.':'En az bir sıvı/taban ve bir sebze veya protein/bakliyat seç.'}</p>`;
+ if(theme!=='bilgisayar')return '';
+ const status=computerStatus(selected),missing=['İşlemci','Anakart','RAM','Depolama','Güç kaynağı','Kasa'].filter(g=>!selected.some(p=>p.group===g));
+ return `<div class="theme-status" role="status">${missing.length?`<p>Eksik yuvalar: ${missing.join(', ')}</p>`:''}${status.messages.map(m=>`<p>⚠ ${escape(m)}</p>`).join('')}${status.complete?'<p>✓ Temel sistem uyumlu ve tamamlandı.</p>':''}${selected.length?`<small>Güç ihtiyacı: ${status.watts} W · Görüntü çıkışı işlemcide hazır.</small>`:''}</div>`;
+}
+export function themeResultDetails(result){
+ const b=result.breakdown;
+ if(!['computer','soup'].includes(b?.type))return '';
+ const items=b.items.map(p=>`<li>${escape(p.name)}: ${p.points}${p.reason?` · ${escape(p.reason)}`:''}</li>`).join('');
+ const relations=list=>list.map(p=>`<li>${escape(p.name)}: ${p.points>0?'+':''}${p.points}</li>`).join('')||'<li>Bu seçimde ilişki yok.</li>';
+ return `<details class="score-details"><summary>${escape(result.name)} · Ayrıntılar</summary>${scoreChart(result)}<ul>${items}</ul>${b.type==='computer'?`<p>Uyumlu işlemci/anakart/RAM: +${b.coreBonus} · Tam sistem: +${b.completeness}</p><ul>${b.messages.map(m=>`<li>${escape(m)}</li>`).join('')}</ul>`:`<p>${b.valid?'Sıvı ve ana malzeme yapısı geçerli.':'Sıvı veya ana malzeme eksik: sonuç 0.'} Ham toplam: ${b.raw} · Gösterilen puan: ${result.points}</p><h3>İkili ilişkiler</h3><ul>${relations(b.pairs)}</ul><h3>Üçlü ilişkiler</h3><ul>${relations(b.triples)}</ul><small>${b.duplicates} tekrar kart ek katkı vermedi. Yalnızca kullanılan ilişkiler açıldı.</small>`}</details>`;
 }

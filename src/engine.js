@@ -1,5 +1,7 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { BREAKFAST, scoreBreakfast } from './breakfast.js';
+import {COMPUTER,createComputerKits,scoreComputer} from './computer.js';
+import {SOUP,scoreSoup} from './soup.js';
 
 export const THEMES = {
   kahvalti: { name: 'Kahvaltı', groups: ['Ekmek', 'Peynir', 'Yumurta', 'İçecek'], extras: ['Zeytin', 'Domates', 'Bal', 'Reçel'] },
@@ -12,6 +14,7 @@ export class Match {
     requireRule(players.length >= 2 && players.length <= 6, '2–6 oyuncu gerekli.');
     requireRule(new Set(players.map(p => p.id)).size === players.length, 'Oyuncu kimlikleri farklı olmalı.');
     requireRule(THEMES[theme] && [50,100,150].includes(budget) && [8,12,20].includes(seconds), 'Geçersiz maç ayarı.');
+    this.contentVersion=2;this.computerKits=theme==='bilgisayar'?createComputerKits(players.length):null;
     this.theme = theme; this.seconds = seconds; this.players = players.map(p => ({...p, basic: budget, extra: budget, inventory: []}));
     this.priority = players.map(p => p.id);
     for (let i = this.priority.length - 1; i > 0; i--) { const j = randomInt(i + 1); [this.priority[i], this.priority[j]] = [this.priority[j], this.priority[i]]; }
@@ -24,12 +27,13 @@ export class Match {
       const pool = BREAKFAST.filter(x => x.group === group);
       return {id:randomUUID(), ...pool[randomInt(pool.length)]};
     }
+    if(this.contentVersion===2){const pool=(this.theme==='bilgisayar'?COMPUTER:SOUP).filter(p=>p.group===group);return {id:randomUUID(),...pool[randomInt(pool.length)]};}
     return { id: randomUUID(), group, name: `${group} • ${['Klasik', 'Özel', 'Seçkin'][index % 3]}`, points: 5 + (index % 3) * 3 };
   }
   openBasic(now) {
     this.phase = 'basic'; this.deadline = now + this.seconds * 1000; this.bids = {};
     const group = THEMES[this.theme].groups[this.round];
-    this.products = this.players.map((_, i) => this.product(group, randomInt(3)));
+    this.products = this.players.map((_, i) => this.theme==='bilgisayar'&&this.computerKits?{id:randomUUID(),...COMPUTER.find(p=>p.modelId===this.computerKits[i][this.round])}:this.product(group, randomInt(3)));
   }
   submitBasic(id, amount, preference, now = Date.now()) {
     requireRule(this.phase === 'basic' && now < this.deadline, 'Gizli teklif kapandı.');
@@ -82,10 +86,11 @@ export class Match {
     if (this.finished.size === this.players.length) this.resolveBuild();
   }
   resolveBuild() {
-    // Prototype scoring only. Production compatibility and hidden soup relations are a later milestone.
+    // Older persisted matches retain their scoring; new matches use version 2 content.
     this.results = this.players.map(p => {
       const selected = p.inventory.filter(x => (this.builds[p.id] ?? []).includes(x.id));
       if(this.theme === 'kahvalti') return {id:p.id,name:p.name,remaining:p.basic+p.extra,selected,...scoreBreakfast(selected)};
+      if(this.contentVersion===2){const score=this.theme==='bilgisayar'?scoreComputer(selected):scoreSoup(selected);return {id:p.id,name:p.name,remaining:p.basic+p.extra,selected,...score};}
       const unique = [...new Map(selected.map(x => [x.name,x])).values()];
       let points = unique.reduce((sum,x) => sum+x.points,0);
       const groups = new Set(selected.map(x => x.group));
@@ -103,8 +108,9 @@ export class Match {
     else if (this.phase === 'build') this.resolveBuild();
   }
   snapshot(viewerId) {
-    return {theme:this.theme, phase:this.phase, deadline:this.deadline, serverNow:Date.now(), round:this.round, extraIndex:this.extraIndex, products:this.products,
-      players:this.players, priority:this.priority, history:this.history, price:this.price, leader:this.leader,
+    const visible=value=>this.phase==='results'?value:JSON.parse(JSON.stringify(value,(key,v)=>key==='points'?undefined:v));
+    return {theme:this.theme,rulesVersion:this.contentVersion??1, phase:this.phase, deadline:this.deadline, serverNow:Date.now(), round:this.round, extraIndex:this.extraIndex, products:visible(this.products),
+      players:visible(this.players), priority:this.priority, history:visible(this.history), price:this.price, leader:this.leader,
       ownBid:this.phase === 'basic' ? this.bids[viewerId] ?? null : null, ownBuild:this.builds[viewerId] ?? [], finished:[...this.finished], results:this.results};
   }
 }
