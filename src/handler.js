@@ -1,9 +1,11 @@
 import {getStore} from './store.js';
 import {perform} from './service.js';
+import {catalog} from './catalog.js';
 export async function handleApi(req,res){
   res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json; charset=utf-8');
   try{
     const url=new URL(req.url,'http://localhost');
+    if(req.method==='GET'&&url.pathname==='/api/catalog'){res.setHeader('Cache-Control','public, max-age=300');res.end(JSON.stringify(catalog()));return;}
     if(req.method==='POST'&&req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host){res.statusCode=403;res.end(JSON.stringify({error:'Geçersiz istek kaynağı.'}));return;}
     let b={};if(req.method==='POST'){
       if(req.body){b=typeof req.body==='string'?JSON.parse(req.body):req.body;if(JSON.stringify(b).length>20000)throw Error('İstek çok büyük.');}

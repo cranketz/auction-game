@@ -48,3 +48,6 @@ Oyuncu bağlantı göstergesi, 10 saniyede bir kalıcı heartbeat, 30 saniyede �
 Bilgisayarda 30 kurgusal model, N ayrık uyumlu setten temel havuz, soket/RAM/kasa/güç kontrolleri ve kısmi puan açıklamaları eklendi. Çorbada 24 malzeme, sabit gizli olumlu/olumsuz ikili/üçlü ilişkiler ve geçerli sıvı+ana malzeme kontrolü hazır. Tablolar sunucuda kalır; yalnız kullanılan ilişkiler sonuçta açılır. Tüm temalarda puanlar sonuç öncesi API yanıtlarından çıkarılır. Eski maçlar eski puanlamayla biter; yeni maçlar içerik sürümü 2 kullanır. Kurallar docs/TEMA_KURALLARI.md içinde; sayılar denge testi başlangıcıdır.
 
 Doğrulama: 29 test geçti. Canlı bilgisayar ve çorba iki oyunculu maçları sonuç ekranına kadar tamamlandı; test odaları kapatıldı. Gizli puanlar sonuç öncesi API yanıtında yok; /src/soup.js canlı sitede erişilemiyor.
+
+## Ürün kataloğu
+86 ürün için giriş gerektirmeyen, tema/grup/ad filtreli katlanabilir katalog eklendi. Yalnızca kimlik, ad, grup, ipucu ve temel/ekstra bilgileri sunulur; puanlar ve gizli ilişki tabloları sunulmaz. Katalog maç durumundan bağımsızdır. 29 test geçti; tarayıcıda bilgisayar ve anakart filtreleri kontrol edildi. Oyuncu denemeleri ertelendi, denge değerleri korunuyor.
