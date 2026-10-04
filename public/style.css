@@ -439,3 +439,12 @@ tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 @media(max-width:420px){.create-panel>.row label:nth-child(n+3){grid-column:1/-1}}
+.practice-options { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.practice-options summary { color: var(--green); font-weight: 700; }
+.practice-options select { max-width: 180px; }
+.practice-options button { margin: 12px 0; }
+.practice-options small { display: block; }
+.practice-label { display: grid; gap: 6px; padding: 16px 20px; background: #eaf0e5; border: 1px solid var(--line); border-radius: 16px; }
+.practice-label span { font-size: 14px; color: var(--muted); }
+.bot-badge { display: inline-block; vertical-align: middle; padding: 3px 8px; border-radius: 8px; background: #f9eaca; color: #775218; font: 700 12px/1.4 system-ui, sans-serif; }
+.practice-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
