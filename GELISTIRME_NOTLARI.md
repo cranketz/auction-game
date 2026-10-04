@@ -37,3 +37,8 @@ DNS Cloudflare tarafından yönetilir. Vercel hedef kaydı: CNAME oyun → 3cf57
 17 test ve gerçek Neon üzerinde tam servis akışı geçti. Canlı API oturum/cookie/oda/durum/çıkış kontrolleri geçti. İki oyunculu canlı kontrol için node scripts/verify-live.mjs https://auction-game-zeta.vercel.app çalıştırılır; gerçek süreleri kullanır ve test odasını sonunda kapatır.
 
 Yayın tamamlandı: https://oyun.redodesign.art — DNS kaydı Cloudflare'a eklendi; Vercel Valid Configuration ve HTTPS doğrulandı. Ana site HTTPS 200 döndürüyor, mevcut ana kayıtlar korundu. Canlı iki oyunculu maç baştan sona geçti; yeni hostname üzerinde giriş/oda/durum/çıkış ve sahte oturum reddi doğrulandı.
+
+## Bağlantı dayanıklılığı · 4 Ekim 2026
+
+Oyuncu bağlantı göstergesi, 10 saniyede bir kalıcı heartbeat, 30 saniyede çevrimdışı durumu, 45 saniyede bağlı oyuncuya oda yönetimi devri ve 2 dakikada bağlantısız lobi oyuncusu temizliği eklendi. Aktif maçın oyuncu sayısı/dağıtımı bağlantı kaybında değişmez; ürünler korunur. Geri dönen eski kurucu yönetimi otomatik geri almaz. Tarayıcı çevrimiçi olunca güncelleme bağlantısı yeniden kurulur.
+22 test: yönetim devri, yeniden bağlanma, lobi temizliği, sahte oturum ve beş odada altışar oyunculu tam maç akışı. Bu test kapasite davranışını doğrular; gerçek trafik gecikmesi/yük ölçümü değildir.

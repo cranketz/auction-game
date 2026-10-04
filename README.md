@@ -23,6 +23,6 @@ Oda, misafir oturumu ve maç durumu Postgres'te saklanır. Sürüm karşılaşt�
 
 Oturum cookie'si HttpOnly, SameSite=Strict ve yayında Secure'dür; 7 gün geçerlidir. Girişler IP başına 10 dakikada 20 ile sınırlıdır. 6 saattir işlem yapılmayan odalar temizlenir. Ana domain veya diğer projelerin DNS/veritabanı ayarları değiştirilmez.
 
-Kahvaltı 16 temel, 16 ekstra model ve ikili/üçlü uyum puanlaması içerir. Puanlar yalnızca sonuçta gösterilir. Bilgisayar uyumluluğu ve çorbanın gizli uyumları henüz geçici puanlama kullanır. Bağlantısı kopan oda sahibinin otomatik devri henüz yoktur.
+Kahvaltı 16 temel, 16 ekstra model ve ikili/üçlü uyum puanlaması içerir. Puanlar yalnızca sonuçta gösterilir. Bilgisayar uyumluluğu ve çorbanın gizli uyumları henüz geçici puanlama kullanır. Bağlantı durumu 30 saniyelik toleransla gösterilir. Bağlantısı kopan oda sahibinin yönetimi 45 saniye sonra çevrimiçi oyuncuya devredilir; geri dönmesi yönetimi geri almaz. Lobide 2 dakika bağlantısız kalan oyuncu çıkarılır. Devam eden maçta ürünleri ve yeri korunur; aynı tarayıcı oturumuyla geri dönebilir. Temizlik ve yönetim devri bir sonraki sunucu isteğinde uygulanır.
 
-Plan: PROJE_PLANI.md. 17 test; servis testi eşzamanlı teklifler ve saklanıp geri yüklenen tam maç akışını kapsar. Ücretsiz planların kullanım kotaları Vercel ve Neon panelinden izlenmelidir.
+Plan: PROJE_PLANI.md. 22 test; servis testi eşzamanlı teklifler ve saklanıp geri yüklenen tam maç akışını kapsar. Ücretsiz planların kullanım kotaları Vercel ve Neon panelinden izlenmelidir.
