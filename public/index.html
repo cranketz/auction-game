@@ -1,2 +1,40 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Auction Game</title><link rel="stylesheet" href="/style.css"></head><body><a class="skip-link" href="#app">Oyun alanına geç</a><header><div class="brand"><span class="brand-mark">A<span>↗</span></span><span>AUCTION<span class="brand-light"> GAME</span></span></div><div class="header-meta"><span class="live-dot"></span> Birlikte oyna. Akıllıca seç. <span id="connection" role="status">Bağlanıyor…</span></div></header><main><details id="notice"><summary>Nasıl oynanır?</summary><ol class="quick-guide"><li><strong>Odaya katıl.</strong> 2–6 oyuncu gerekir. Diğer oyuncular hazır olunca oda sahibi başlatır.</li><li><strong>Temel ürünleri al.</strong> Tercihlerini sırala ve gizli teklifini kaydet. Yüksek teklif önce seçer; herkes kendi teklifini öder. Göndermezsen teklifin 0 sayılır.</li><li><strong>Ekstralara teklif ver.</strong> Ayrı bütçeni kullan. +/− düğmeleri teklif alanını değiştirir; satın almak için Teklif ver düğmesine bas.</li><li><strong>Kombinasyonunu oluştur.</strong> Aldığın ürünlerden seçim yap. Seçimler otomatik kaydolur; bitirdiğinde kilitlenir.</li><li><strong>Sonucu gör.</strong> Puan ve uyum dökümü maç sonunda açılır. Aynı odada tekrar oynayabilirsin.</li></ol><p>Temel ve ekstra bakiyeleri arasında para aktarılmaz. Bağlantın kesilirse aynı tarayıcıdan geri dönebilirsin; maç süresi devam eder.</p><p>Kahvaltıda ürün uyumları, bilgisayarda çalışan parçalar ve çorbada gizli malzeme ilişkileri puan getirir. Puan dökümü maç sonunda açılır.</p></details><details id="catalog"><summary>Ürün kataloğu</summary><div class="catalog-content"></div></details><div id="reconnectStatus" role="status" aria-live="polite"></div><div id="error" role="alert"></div><div id="requestStatus" role="status" aria-live="polite"></div><div id="app" tabindex="-1"></div></main><script type="module" src="/app.js"></script><script type="module" src="/catalog.js"></script></body></html>
-
+<!doctype html>
+<html lang="tr">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="theme-color" content="#285a43">
+ <meta name="description" content="2–6 kişiyle açık artırma ve kombinasyon oyunu. Kahvaltı hazırla, bilgisayar topla, çorbanı oluştur.">
+ <title>Auction Game · Al, birleştir, kazan</title>
+ <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+ <a class="skip-link" href="#app">Oyun alanına geç</a>
+ <header>
+  <div class="brand"><span class="brand-mark" aria-hidden="true">A<span>↗</span></span><span>AUCTION<span class="brand-light"> GAME</span></span></div>
+  <div class="header-meta"><span id="connection" role="status">2–6 oyuncu</span></div>
+ </header>
+ <main>
+  <div class="app-tools">
+   <details id="notice"><summary>Nasıl oynanır?</summary>
+    <ol class="quick-guide">
+     <li><strong>Bir odaya katıl.</strong> 2–6 oyuncu gerekir. Diğer oyuncular hazır olunca oda sahibi maçı başlatır.</li>
+     <li><strong>Temel ürünleri al.</strong> Tercihlerini sırala ve gizli teklifini kaydet. Yüksek teklif önce seçer; herkes kendi teklifini öder. Göndermezsen teklifin 0 sayılır.</li>
+     <li><strong>Ekstralara teklif ver.</strong> Ayrı bütçeni kullan. +/− düğmeleri tutarı değiştirir; göndermek için Teklif ver düğmesine bas. İlk 3 geçerli teklif süreyi 3'er, sonrakiler 1'er saniye uzatır.</li>
+     <li><strong>Kombinasyonunu oluştur.</strong> Aldığın ürünlerden seçim yap. Kahvaltıda en fazla 8, çorbada 6, bilgisayarda 10 ürün seçilir. Bilgisayarda her yuvaya tek parça gelir. Seçimler kaydolur; bitirdiğinde kilitlenir.</li>
+     <li><strong>Sonucu gör.</strong> Ürün puanları ve uyum dökümü maç sonunda açılır. Eşit puanda kalan para karşılaştırılır. Aynı odada tekrar oynayabilirsin.</li>
+    </ol>
+    <p>Temel ve ekstra bakiyeleri arasında para aktarılmaz. Bağlantın kesilirse aynı tarayıcıdan geri dönebilirsin; maç süresi devam eder.</p>
+   </details>
+   <details id="catalog"><summary>Ürün kataloğu</summary><div class="catalog-content"></div></details>
+  </div>
+  <div id="reconnectStatus" role="status" aria-live="polite" hidden><span id="reconnectText"></span><button id="reconnectRetry" class="secondary">Şimdi tekrar dene</button></div>
+  <div id="error" role="alert"></div>
+  <div id="uiAnnouncement" role="status" aria-live="polite"></div>
+  <div id="requestStatus" role="status" aria-live="polite"></div>
+  <div id="app" tabindex="-1"></div>
+ </main>
+ <script type="module" src="/app.js"></script>
+ <script type="module" src="/catalog.js"></script>
+</body>
+</html>

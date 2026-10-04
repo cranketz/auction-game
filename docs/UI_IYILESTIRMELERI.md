@@ -1,5 +1,7 @@
 # Oyun arayüzü iyileştirmeleri
 
+Güncel ekran bazında bulgular, değişiklikler ve doğrulamalar [baştan sona UI inceleme raporunda](UI_INCELEME_RAPORU.md) yer alır. Aşağıdaki liste ilk arayüz çalışmasının tarihsel özetidir; güncel HUD yerleşimi ve bağlantı mimarisi raporda açıklanır.
+
 - Yerel SVG çizimleri: kahvaltı ürünleri; diğer temalar için grup çizimleri. Dış görsel servisi kullanılmaz.
 - Hazırlama alanları: kahvaltı tabağı, altı temel bilgisayar yuvası ve ekstra alanı, çorba kazanı.
 - Seçilen ürünler hazırlama alanında, satın alınanlar aşağıdaki kartlarda gösterilir. Dokunarak ekleme/çıkarma ve klavye düğmeleri çalışır. Sunucu kart sahipliğini ve sınırları doğrular.

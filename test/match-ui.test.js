@@ -16,4 +16,6 @@ test('personal result uses money tie breaker and shared ranks',()=>{
  assert.match(resultSummary({results},'b'),/Birinciliği paylaştın/);
  assert.match(resultSummary({results},'c'),/3. sıra/);
  assert.match(resultSummary({results},'a'),/&lt;A&gt;/);
+ assert.match(resultSummary({results},'c'),/sıralamayı kalan para belirledi/);
+ assert.ok(!resultSummary({results},'a',false).includes('winner-list'));
 });

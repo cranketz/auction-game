@@ -6,6 +6,8 @@ Küçük ölçekli ilk internet yayını Vercel auction-game projesinde hazırla
 
 ## Tartışılacak geliştirmeler
 
+Güncel arayüz incelemesi · 4 Ekim 2026: Giriş, oda, lobi, temel tercih, ekstra açık artırma, üç temanın hazırlama alanları, sonuç ve katalog yenilendi. Görsel sistem, dokunma alanları, klavye odağı, taslak/açık ayrıntı koruma, geçersiz tutar/seçim engelleri, bekleyen işlemler ve yeniden bağlantı ele alındı. Bilgisayar/çorba çizimleri ayrıştırıldı. Ekonomi ve puanlama korunur. 39 otomatik test; yerel 2/6 oyuncu HTTP akışları, 320/360/768/1440 px yerleşimler ve hata/geri bağlanma doğrulandı. Gerçek oyuncu denemeleri ertelendi. Detaylar: docs/UI_INCELEME_RAPORU.md. Yerel denetim aracı: scripts/verify-ui-server.mjs.
+
 1. Gerçek ürün çeşitleri: Klasik/Özel/Seçkin yerine anlamlı ürünler ve özellikler. Özellikle puanlar gizliyken oyuncu yalnızca isme bakarak karar vermek zorunda kalmamalı.
 2. Gizli temel teklif dengesi: Ücretsiz kalan ürün, yüksek teklifin getirisi ve öncelik kuyruğunun etkisini karşılaştır.
 3. Tema puanlamaları: Bilgisayar uyumluluğu, kahvaltı kombinasyonları, sabit gizli çorba uyumları.
