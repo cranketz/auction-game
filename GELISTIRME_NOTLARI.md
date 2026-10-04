@@ -54,3 +54,5 @@ Doğrulama: 29 test geçti. Canlı bilgisayar ve çorba iki oyunculu maçları s
 
 ## Maç akışı ve sonuçlar
 Aşama şeridi, temel/ekstra toplamları ve kalan tur sayısı eklendi. Bağlantı kesilmesi ve yeniden bağlanma bildirimi gösterilir. Sonuçlar kişisel sıralama, paylaşılan birinciler, para eşitlik kuralı ve odadan ayrılma sunar. Yeniden oyna aynı ayarlarla lobiye döner; oyuncular tekrar hazır olur. Beş adımlı kısa rehber eklendi. 31 otomatik test geçti. Oyuncu denemeleri ertelenmeye devam ediyor.
+
+Yerel iki oyunculu maçta temel/ekstra sayaçları, kişisel sonuç ve aynı odada yeniden lobiye dönüş doğrulandı. Hızlı seçimlerin eşzamanlı kayıt çakışmasını önlemek için kombinasyon kayıt isteği sırasında seçim ve bitirme düğmeleri geçici kilitlenir.
