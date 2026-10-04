@@ -7,7 +7,7 @@ export async function verifyLifecycle(store){
   const call=(token,path,b={},now=1000000,method='POST')=>perform(store,{token,path,b,now,method});
   const a=await call(null,'session',{name:'Birinci'});
   const b=await call(null,'session',{name:'İkinci'});
-  const created=await call(a.token,'create',{theme:'kahvalti',budget:100,seconds:8});
+  const created=await call(a.token,'create',{theme:'kahvalti',budget:100,seconds:20});
   const code=created.value.code;
   await assert.rejects(call(a.token,'start'),/Yeterli oyuncu/);
   await call(b.token,'join',{code});await call(b.token,'ready',{ready:true});

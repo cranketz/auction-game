@@ -1,5 +1,5 @@
 import {randomUUID,randomBytes,createHash} from 'node:crypto';
-import {Match,THEMES} from './engine.js';
+import {Match,THEMES,OFFER_SECONDS} from './engine.js';
 import {transact} from './store.js';
 import {createBots,advanceBots} from './bots.js';
 const roomFor=(data,id)=>Object.values(data.rooms).find(r=>r.players.some(p=>p.id===id));
@@ -59,7 +59,7 @@ export async function perform(store,{method,path,token,b={},ip='local',now=Date.
     let room=roomFor(data,user.id);
     if(path==='create'){
       if(room)throw Error('Önce mevcut odadan ayrılın.');if(Object.keys(data.rooms).length>=5)throw Error('Test kapasitesi dolu.');
-      if(!THEMES[b.theme]||![50,100,150].includes(b.budget)||![8,12,20].includes(b.seconds))throw Error('Geçersiz ayarlar.');
+      if(!THEMES[b.theme]||![50,100,150].includes(b.budget)||!OFFER_SECONDS.includes(b.seconds))throw Error('Geçersiz ayarlar.');
       const bots=b.practice===true?createBots(b.bots):[];
       const code=randomBytes(4).toString('hex').toUpperCase();room={code,host:user.id,public:bots.length?false:b.public!==false,practice:bots.length>0,settings:{theme:b.theme,budget:b.budget,seconds:b.seconds},players:[],match:null,updatedAt:now};join(data,room,user,now);room.players.push(...bots);data.rooms[code]=room;
     }else if(path==='join'||path==='quick'){

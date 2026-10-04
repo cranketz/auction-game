@@ -438,7 +438,6 @@ tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
-@media(max-width:420px){.create-panel>.row label:nth-child(n+3){grid-column:1/-1}}
 .practice-options { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
 .practice-options summary { color: var(--green); font-weight: 700; }
 .practice-options select { max-width: 180px; }
@@ -448,3 +447,112 @@ tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
 .practice-label span { font-size: 14px; color: var(--muted); }
 .bot-badge { display: inline-block; vertical-align: middle; padding: 3px 8px; border-radius: 8px; background: #f9eaca; color: #775218; font: 700 12px/1.4 system-ui, sans-serif; }
 .practice-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+
+/* One primary task per screen; supporting information is optional. */
+.app-tools { margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--line); }
+.home-layout .join-panel { display: block; }
+.join-panel > summary, .rooms-browser > summary { min-height: 44px; font-size: 21px; font-weight: 700; color: var(--green); }
+.join-content { display: grid; gap: 12px; padding-top: 16px; }
+.rooms-browser { margin-top: 24px; }
+.rooms-browser .section-title { margin: 12px 0 16px; }
+.players-toggle .room-code { width: fit-content; margin: 14px 0; }
+.product-hints, .build-preview { margin: 16px 0; font-size: 14px; }
+.product-hints summary, .build-preview summary { min-height: 44px; padding: 10px 0; color: var(--green); font-weight: 650; }
+.product-hints ul { padding-left: 20px; }
+.product-hints li { margin: 10px 0; color: var(--muted); }
+#app[data-screen='basic'] .product-hints { display: none; }
+.product-group, .build-actions > span { display: none; }
+
+@media (max-width: 700px) {
+  html { scroll-padding-top: 12px; }
+  header { flex-wrap: nowrap; gap: 8px; padding: 10px 12px; }
+  .brand { font-size: 12px; gap: 8px; }
+  .brand-mark { width: 30px; height: 32px; font-size: 22px; }
+  .header-meta { flex-basis: auto; font-size: 12px; }
+  #connection { font-size: 12px; padding: 5px 8px; }
+  main { padding: 0 12px; margin: 12px auto 32px; }
+  .panel, #stage { padding: 16px; margin: 12px 0; }
+  .page-title { margin: 12px 0 16px; gap: 8px; }
+  .page-title h1 { font-size: 28px; }
+  .page-title p { display: none; }
+  .profile-chip { padding: 6px 10px; font-size: 13px; }
+  .create-panel > .row { gap: 8px 12px; margin-bottom: 8px; }
+  .create-panel label { margin: 4px 0; }
+  .create-panel > h2 { margin-bottom: 10px; }
+  .create-panel .offer-help { margin: 10px 0; font-size: 13px; }
+  .practice-options { margin-top: 14px; padding-top: 12px; }
+  .practice-options summary { min-height: 44px; padding: 10px 0; }
+  .join-panel > summary, .rooms-browser > summary { font-size: 17px; }
+  .rooms-browser { margin-top: 16px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .room-header { gap: 6px; margin-bottom: 8px; }
+  .room-header h1 { font-size: 24px; margin: 0; }
+  .room-meta { font-size: 12px; }
+  #app:is([data-screen='basic'], [data-screen='extra'], [data-screen='build']) .room-header .room-meta { display: none; }
+  .practice-label { display: none; }
+  .match-progress { margin: 8px 0; }
+  .match-progress ol { display: none; }
+  .match-progress p { font-size: 12px; margin: 0; }
+  .player-dock { padding: 2px 12px; margin: 4px 0; }
+  .player-dock > div > strong { display: none; }
+  .player-dock > div > span { margin: 0; font-size: 14px; font-weight: 700; }
+  .player-dock details { font-size: 12px; }
+  .player-dock details > summary { min-height: 44px; display: flex; align-items: center; }
+  #app[data-screen='build'] .player-dock { display: none; }
+  .players-toggle { margin: 16px 0; }
+  .basic-heading, .auction-heading { flex-wrap: nowrap; align-items: flex-start; gap: 8px; }
+  .basic-heading, .auction-heading { position: sticky; top: 8px; z-index: 3; background: var(--surface); padding: 4px 0; }
+  .basic-heading > div:first-child, .auction-heading h2 { flex: 1 1 auto; min-width: 0; }
+  .basic-heading h2, .auction-heading h2 { font-size: 20px; margin: 0; }
+  #stage h2[tabindex='-1']:focus { outline: none; }
+  .basic-heading .eyebrow { font-size: 10px; margin-bottom: 4px; }
+  .timer { flex-shrink: 0; font-size: 16px; padding: 8px; white-space: nowrap; }
+  .basic-help { font-size: 13px; margin: 12px 0; line-height: 1.5; }
+  .preference-list { gap: 6px; margin: 12px 0; }
+  .preference-card { grid-template-columns: 22px 32px minmax(0, 1fr) 44px; gap: 8px; padding: 8px; }
+  .preference-card .rank { width: 22px; height: 22px; font-size: 12px; }
+  .preference-card .product-icon { width: 32px; height: 32px; }
+  .preference-card .order-controls { grid-column: auto; }
+  .preference-card .order-controls button { min-width: 44px; width: 44px; min-height: 44px; padding: 8px; }
+  .preference-card [data-direction='1'], .preference-card .product-info > span { display: none; }
+  .product-info { font-size: 14px; }
+  #app[data-screen='basic'] .product-hints { display: block; }
+  .basic-bid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding-top: 12px; }
+  .basic-bid > label { grid-column: 1 / -1; margin: 0; }
+  .basic-bid .bid-input input { min-height: 48px; font-size: 18px; }
+  .basic-bid > button { padding: 10px 8px; font-size: 14px; }
+  .bid-status { margin: 8px 0; font-size: 12px; }
+  .auction-symbol { width: 52px; height: 52px; margin: 12px 0 4px; }
+  .auction-symbol .product-art { width: 52px; height: 52px; }
+  .auction-price { padding: 12px; margin: 12px 0 8px; }
+  .auction-price > strong { font-size: 28px; }
+  .auction-leader { font-size: 14px; padding: 8px 12px; margin-bottom: 12px; }
+  .bid-label { margin: 8px 0; }
+  .bid-controls { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin-top: 8px; }
+  .bid-controls > button[data-add] { padding: 8px 0; min-height: 44px; font-size: 14px; }
+  .bid-controls > input { grid-column: 1 / 4; margin-top: 8px; }
+  .bid-controls #submit { grid-column: 4 / 7; padding: 10px 8px; margin-top: 8px; }
+  .offer-help { font-size: 12px; line-height: 1.5; }
+  #app[data-screen='build'] #stage > p { font-size: 13px; margin: 12px 0; }
+  .build-preview { margin: 4px 0; }
+  .build-preview .build-board { margin: 8px 0; }
+  .theme-status { padding: 10px 12px; margin: 8px 0; font-size: 12px; }
+  .inventory-title { margin: 16px 0 8px; font-size: 14px; }
+  .build-grid { gap: 8px; }
+  .build-card.secondary { min-height: 116px; padding: 10px; font-size: 14px; }
+  .build-card { scroll-margin-top: 90px; scroll-margin-bottom: 90px; }
+  .build-card .product-art { width: 36px; height: 36px; margin-bottom: 4px; }
+  .build-card .selection-mark { position: static; font-size: 11px; padding: 3px 6px; min-height: 22px; margin-bottom: 4px; }
+  .build-card .build-hint { display: none; }
+  .build-card .product-group { display: block; margin-top: 3px; font-size: 11px; font-weight: 400; }
+  #app[data-screen='build'] #stage > .build-count { display: none; }
+  .build-actions { position: sticky; bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 3px 12px #233c3312; z-index: 2; }
+  .build-actions > span { display: block; font-size: 12px; font-weight: 700; color: var(--green); white-space: nowrap; }
+  .build-actions #finish { width: auto; margin: 0; font-size: 13px; padding: 10px; }
+  #finish { margin-top: 12px; }
+  .round-summary, .practice-actions { margin-top: 16px; font-size: 12px; }
+  .practice-actions small { display: none; }
+  .result-actions { margin: 16px 0; }
+}
+@media (max-width: 420px) {
+  .bid-controls > button[data-add] { grid-column: span 2; }
+}

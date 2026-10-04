@@ -4,7 +4,7 @@ async function login(name){const response=await fetch(base+'/api/session',{metho
 async function request(player,path,data){const response=await fetch(base+'/api/'+path,{method:data===undefined?'GET':'POST',headers:{Cookie:player.cookie,'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify(data)});const result=await response.json();assert.equal(response.status,200,JSON.stringify(result));return result;}
 const theme=process.argv[3]??'kahvalti';
 const a=await login('Yayın testi A'),b=await login('Yayın testi B');
-let room=await request(a,'create',{theme,budget:100,seconds:8,public:false});
+let room=await request(a,'create',{theme,budget:100,seconds:20,public:false});
 await request(b,'join',{code:room.code});await request(b,'ready',{ready:true});room=await request(a,'start',{});
 let key='';
 while(room.match.phase!=='build'){

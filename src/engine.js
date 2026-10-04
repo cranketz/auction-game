@@ -9,11 +9,14 @@ export const THEMES = {
   corba: { name: 'Çorba', groups: ['Sebze', 'Protein / bakliyat', 'Sıvı / taban'], extras: ['Yağ', 'Baharat', 'Kıvam', 'Garnitür'] }
 };
 function requireRule(condition, message) { if (!condition) throw new Error(message); }
+export const OFFER_SECONDS = [20, 30, 45];
 export class Match {
-  constructor(players, { theme = 'kahvalti', budget = 100, seconds = 12 } = {}, now = Date.now()) {
+  constructor(players, { theme = 'kahvalti', budget = 100, seconds = 30 } = {}, now = Date.now()) {
     requireRule(players.length >= 2 && players.length <= 6, '2–6 oyuncu gerekli.');
     requireRule(new Set(players.map(p => p.id)).size === players.length, 'Oyuncu kimlikleri farklı olmalı.');
-    requireRule(THEMES[theme] && [50,100,150].includes(budget) && [8,12,20].includes(seconds), 'Geçersiz maç ayarı.');
+    // Existing lobbies may still contain the previous 8/12-second choices.
+    requireRule(THEMES[theme] && [50,100,150].includes(budget) && [...OFFER_SECONDS,8,12].includes(seconds), 'Geçersiz maç ayarı.');
+    this.buildSeconds = 90;
     this.contentVersion=2;this.computerKits=theme==='bilgisayar'?createComputerKits(players.length):null;
     this.theme = theme; this.seconds = seconds; this.players = players.map(p => ({...p, basic: budget, extra: budget, inventory: []}));
     this.priority = players.map(p => p.id);
@@ -74,7 +77,7 @@ export class Match {
     this.history.push({type:'extra', playerId:this.leader, amount:this.price, product:this.products[0]});
     this.extraIndex++;
     if (this.extraIndex < this.players.length * 2) this.openExtra(now);
-    else { this.phase = 'build'; this.deadline = now + 60000; this.products = []; }
+    else { this.phase = 'build'; this.deadline = now + (this.buildSeconds ?? 60) * 1000; this.products = []; }
   }
   saveBuild(id, ids, finish = false, now = Date.now()) {
     requireRule(this.phase === 'build' && now < this.deadline && !this.finished.has(id), 'Hazırlama kapandı.');

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 const base='http://127.0.0.1:3000';
 async function call(path,data,token){const r=await fetch(base+'/api/'+path,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Cookie:'auction='+token}:{})},body:JSON.stringify(data)});const json=await r.json();assert.equal(r.status,200,JSON.stringify(json));return json;}
 const a=await call('session',{name:'Test A'}), b=await call('session',{name:'Test B'});
-const room=await call('create',{theme:'kahvalti',budget:50,seconds:8,public:false},a.token);
+const room=await call('create',{theme:'kahvalti',budget:50,seconds:20,public:false},a.token);
 await call('join',{code:room.code},b.token);
 await call('ready',{ready:true},a.token);await call('ready',{ready:true},b.token);
 const started=await call('start',{},a.token);

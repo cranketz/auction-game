@@ -7,7 +7,7 @@ import {MemoryStore} from '../src/store.js';
 async function practice(theme='kahvalti',bots=1){
  const store=new MemoryStore(),user=await perform(store,{method:'POST',path:'session',b:{name:'Pratik oyuncusu'},now:0});
  const call=(path,b={},now=0,method='POST',token=user.token)=>perform(store,{method,path,b,now,token});
- const created=await call('create',{theme,budget:100,seconds:8,practice:true,bots,public:true});
+ const created=await call('create',{theme,budget:100,seconds:20,practice:true,bots,public:true});
  return {store,user,call,created};
 }
 test('practice validates bot counts, remains private and rejects other humans',async()=>{
@@ -58,7 +58,7 @@ test('practice bots cannot become host; orphaned lobbies and active leave releas
  await call('rooms',{},46000,'GET',outsider.token);
  assert.equal(Object.values((await store.read()).data.rooms)[0].host,user.value.id);
  await call('rooms',{},120001,'GET',outsider.token);assert.equal(Object.keys((await store.read()).data.rooms).length,0);
- await call('create',{theme:'corba',budget:50,seconds:8,practice:true,bots:1},120002);await call('start',{},120002);await call('leave',{},120003);
+ await call('create',{theme:'corba',budget:50,seconds:20,practice:true,bots:1},120002);await call('start',{},120002);await call('leave',{},120003);
  assert.equal(Object.keys((await store.read()).data.rooms).length,0);assert.equal((await call('state',{},120004,'GET')).value,null);
 });
 test('bot sealed plans may settle at deadline; extras never retroactively extend an expired auction',async()=>{

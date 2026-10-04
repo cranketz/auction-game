@@ -15,6 +15,11 @@
   <div class="header-meta"><span id="connection" role="status">2–6 oyuncu</span></div>
  </header>
  <main>
+  <div id="reconnectStatus" role="status" aria-live="polite" hidden><span id="reconnectText"></span><button id="reconnectRetry" class="secondary">Şimdi tekrar dene</button></div>
+  <div id="error" role="alert"></div>
+  <div id="uiAnnouncement" role="status" aria-live="polite"></div>
+  <div id="requestStatus" role="status" aria-live="polite"></div>
+  <div id="app" tabindex="-1"></div>
   <div class="app-tools">
    <details id="notice"><summary>Nasıl oynanır?</summary>
     <ol class="quick-guide">
@@ -28,11 +33,6 @@
    </details>
    <details id="catalog"><summary>Ürün kataloğu</summary><div class="catalog-content"></div></details>
   </div>
-  <div id="reconnectStatus" role="status" aria-live="polite" hidden><span id="reconnectText"></span><button id="reconnectRetry" class="secondary">Şimdi tekrar dene</button></div>
-  <div id="error" role="alert"></div>
-  <div id="uiAnnouncement" role="status" aria-live="polite"></div>
-  <div id="requestStatus" role="status" aria-live="polite"></div>
-  <div id="app" tabindex="-1"></div>
  </main>
  <script type="module" src="/app.js"></script>
  <script type="module" src="/catalog.js"></script>

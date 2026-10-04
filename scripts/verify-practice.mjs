@@ -9,7 +9,7 @@ async function request(path,data){
 }
 let created=false,sawBotExtra=false;
 try{
- let room=await request('create',{theme,budget:100,seconds:8,practice:true,bots});created=true;
+ let room=await request('create',{theme,budget:100,seconds:20,practice:true,bots});created=true;
  assert.equal(room.practice,true);assert.equal(room.public,false);assert.equal(room.players.filter(p=>p.bot&&p.ready).length,bots);
  assert.ok(!(await request('rooms')).some(r=>r.code===room.code));
  room=await request('start',{});let key='',sentExtra=false,finished=false;const started=Date.now();
