@@ -35,3 +35,5 @@ Veritabanı: auction-game-db, Neon Free, Frankfurt. Sırlar .env.local içinde v
 DNS Cloudflare tarafından yönetilir. Vercel hedef kaydı: CNAME oyun → 3cf574130d948699.vercel-dns-017.com, DNS only. Ana domain kayıtlarına dokunulmaz.
 
 17 test ve gerçek Neon üzerinde tam servis akışı geçti. Canlı API oturum/cookie/oda/durum/çıkış kontrolleri geçti. İki oyunculu canlı kontrol için node scripts/verify-live.mjs https://auction-game-zeta.vercel.app çalıştırılır; gerçek süreleri kullanır ve test odasını sonunda kapatır.
+
+Yayın tamamlandı: https://oyun.redodesign.art — DNS kaydı Cloudflare'a eklendi; Vercel Valid Configuration ve HTTPS doğrulandı. Ana site HTTPS 200 döndürüyor, mevcut ana kayıtlar korundu. Canlı iki oyunculu maç baştan sona geçti; yeni hostname üzerinde giriş/oda/durum/çıkış ve sahte oturum reddi doğrulandı.
