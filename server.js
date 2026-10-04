@@ -12,7 +12,7 @@ async function body(req) {let data='';for await(const chunk of req){data+=chunk;
 const server=http.createServer(async(req,res)=>{
   try {
     const url=new URL(req.url,'http://localhost');
-    if(req.method==='GET' && ['/', '/app.js','/style.css'].includes(url.pathname)) {
+    if(req.method==='GET' && ['/', '/app.js','/ui.js','/style.css'].includes(url.pathname)) {
       const path=url.pathname==='/'?'index.html':url.pathname.slice(1);
       res.writeHead(200,{'Content-Type':path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':'text/html; charset=utf-8'});res.end(await readFile(new URL(`./public/${path}`,import.meta.url)));return;
     }
