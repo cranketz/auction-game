@@ -1,13 +1,39 @@
 import {productArt,buildBoard,scoreChart} from './ui.js';
 const app=document.querySelector('#app'), error=document.querySelector('#error');
+let mutationRevision=0;
+let pollTimer, pollGeneration=0, lastState='', clockOffset=0;
 let me=JSON.parse(localStorage.getItem('auctionUser')||'null'), room=null, stream, preference=[], selection=[], roundKey='', extraDraft=null, basicDraft=null, connected=false, feedback=null, lastLeader=null, lastHistoryKey='';
 const names={kahvalti:'Kahvaltı',bilgisayar:'Bilgisayar',corba:'Çorba'};
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function api(path,data){error.textContent='';try{const res=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const result=await res.json();if(!res.ok)throw Error(result.error);return result;}catch(e){if(['basic','bid','build'].includes(path)){showFeedback(e.message,'error');}else error.textContent=e.message;throw e;}}
+async function api(path,data){error.textContent='';try{const res=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const result=await res.json();if(res.ok)mutationRevision++;if(!res.ok)throw Error(result.error);return result;}catch(e){if(['basic','bid','build'].includes(path)){showFeedback(e.message,'error');}else error.textContent=e.message;throw e;}}
 function connectionStatus(){const el=document.querySelector('#connection');if(el){el.textContent=!me?'Giriş bekleniyor':connected?'Bağlı':'Yeniden bağlanıyor…';el.classList.toggle('offline',!connected);}document.querySelectorAll('#submit,#finish').forEach(b=>{if(!connected)b.disabled=true;});}
 function showFeedback(text,type='success'){feedback={text,type,time:Date.now()};const el=document.querySelector('#actionFeedback');if(el){el.textContent=text;el.className='action-feedback '+type;}}
-function events(){stream?.close();connected=false;stream=new EventSource('/api/events');stream.onopen=()=>{connected=true;render();connectionStatus();};stream.onerror=()=>{connected=false;connectionStatus();};stream.onmessage=e=>{const next=JSON.parse(e.data);if(next.match?.phase==='extra'&&next.match.leader!==lastLeader){if(lastLeader===me?.id&&next.match.leader)showFeedback('Rakip seni geçti. Teklifini artırabilirsin.','warning');lastLeader=next.match.leader;}room=next;render();connectionStatus();};}
-function setRoom(r){room=r;render();}
+function events(){
+ clearTimeout(pollTimer);const generation=++pollGeneration;connected=false;
+ stream={close(){++pollGeneration;clearTimeout(pollTimer);}};
+ async function poll(){
+  if(generation!==pollGeneration||!me)return;
+  try{
+   const revision=mutationRevision;
+   const res=await fetch('/api/state',{cache:'no-store',signal:AbortSignal.timeout(15000)});
+   if(res.status===401){me=null;room=null;localStorage.removeItem('auctionUser');stream.close();render();return;}
+   if(!res.ok)throw Error('Bağlantı kurulamadı.');
+   const next=await res.json();if(generation!==pollGeneration)return;if(revision!==mutationRevision){pollTimer=setTimeout(poll,50);return;}
+   const wasConnected=connected;connected=true;
+   if(next?.match?.serverNow)clockOffset=next.match.serverNow-Date.now();
+   const signature=JSON.stringify(next,(key,value)=>key==='serverNow'?undefined:value);
+   if(signature!==lastState||!wasConnected){
+    lastState=signature;
+    if(next?.match?.phase==='extra'&&next.match.leader!==lastLeader){if(lastLeader===me?.id&&next.match.leader)showFeedback('Rakip seni geçti. Teklifini artırabilirsin.','warning');lastLeader=next.match.leader;}
+    room=next;render();
+   }
+   connectionStatus();
+  }catch{if(generation!==pollGeneration)return;connected=false;connectionStatus();}
+  if(generation===pollGeneration)pollTimer=setTimeout(poll,room?.match&&room.match.phase!=='results'?750:2500);
+ }
+ poll();
+}
+function setRoom(r){room=r;lastState=JSON.stringify(r,(key,value)=>key==='serverNow'?undefined:value);render();}
 function button(id,fn){document.getElementById(id)?.addEventListener('click',()=>Promise.resolve().then(fn).catch(()=>{}));}
 function render(){
  const focused=document.activeElement;
@@ -17,7 +43,7 @@ function render(){
  queueMicrotask(()=>{if(focusId&&previousRoundKey===roundKey){const replacement=document.getElementById(focusId);if(replacement?.tagName==='INPUT'&&focusValue!==null)replacement.value=focusValue;replacement?.focus({preventScroll:true});}});
  connectionStatus();
  app.dataset.screen=!me?'welcome':!room?'home':room.match?.phase??'lobby';
- if(!me){app.innerHTML='<div class="welcome-layout"><section class="hero"><span class="eyebrow">BİR MASA. SAYISIZ OLASILIK.</span><h1>Al. Birleştir.<br><em>Kazan.</em></h1><p>2–6 kişiyle açık artırma ve kombinasyon oyunu.</p><div class="hero-tags"><span>2–6 oyuncu</span><span>3 farklı tema</span><span>Ücretsiz</span></div><div class="hero-cards"><div>🥐<strong>Kahvaltı</strong></div><div>🖥️<strong>Bilgisayar</strong></div><div>🥣<strong>Çorba</strong></div></div></section><section class="panel welcome-card"><span class="eyebrow">MASADA YERİN HAZIR</span><h2>Oyuna katıl</h2><label>Takma adın<input id="name" maxlength="20" autocomplete="nickname" placeholder="Masada nasıl tanınalım?"></label><button id="login">Masaya geç →</button><small>Arkadaşlarını davet et veya açık bir odaya katıl.</small></section></div>';button('login',async()=>{me=await api('session',{name:document.querySelector('#name').value});localStorage.setItem('auctionUser',JSON.stringify(me));document.cookie=`auction=${me.token}; SameSite=Strict; Path=/`;events();render();});return;}
+ if(!me){app.innerHTML='<div class="welcome-layout"><section class="hero"><span class="eyebrow">BİR MASA. SAYISIZ OLASILIK.</span><h1>Al. Birleştir.<br><em>Kazan.</em></h1><p>2–6 kişiyle açık artırma ve kombinasyon oyunu.</p><div class="hero-tags"><span>2–6 oyuncu</span><span>3 farklı tema</span><span>Ücretsiz</span></div><div class="hero-cards"><div>🥐<strong>Kahvaltı</strong></div><div>🖥️<strong>Bilgisayar</strong></div><div>🥣<strong>Çorba</strong></div></div></section><section class="panel welcome-card"><span class="eyebrow">MASADA YERİN HAZIR</span><h2>Oyuna katıl</h2><label>Takma adın<input id="name" maxlength="20" autocomplete="nickname" placeholder="Masada nasıl tanınalım?"></label><button id="login">Masaya geç →</button><small>Arkadaşlarını davet et veya açık bir odaya katıl.</small></section></div>';button('login',async()=>{me=await api('session',{name:document.querySelector('#name').value});localStorage.setItem('auctionUser',JSON.stringify(me));events();render();});return;}
  if(!room){app.innerHTML=`<div class="page-title"><div><span class="eyebrow">OYUN ALANI</span><h1>Bir oda seç.</h1></div><span class="profile-chip">${esc(me.name.slice(0,1).toLocaleUpperCase('tr-TR'))} · ${esc(me.name)}</span></div><div class="panel create-panel"><span class="eyebrow">SENİN MASAN, SENİN AYARLARIN</span><h2>Yeni oda kur</h2><div class="row"><label>Tema<select id="theme">${Object.entries(names).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><label>Bütçe<select id="budget"><option>50</option><option selected>100</option><option>150</option></select></label><label>Teklif süresi<select id="seconds"><option>8</option><option selected>12</option><option>20</option></select></label><label>Görünürlük<select id="visibility"><option value="true">Herkese açık</option><option value="false">Özel</option></select></label></div><button id="create">Oda kur</button></div><div class="panel join-panel row"><label>Bir davetin mi var?<input id="code" aria-label="Oda kodu" placeholder="Oda kodunu yaz"></label><button id="join">Katıl</button><button id="quick" class="secondary">Hızlı katıl</button><button id="refresh" class="secondary">Odaları yenile</button></div><div class="section-title"><div><span class="eyebrow">BİRLİKTE OYNA</span><h2>Açık masalar</h2></div><span>Yeni rakipler seni bekliyor</span></div><div id="rooms" class="grid room-grid"></div>`;
  button('create',async()=>setRoom(await api('create',{theme:document.querySelector('#theme').value,budget:+document.querySelector('#budget').value,seconds:+document.querySelector('#seconds').value,public:document.querySelector('#visibility').value==='true'})));button('join',async()=>setRoom(await api('join',{code:document.querySelector('#code').value})));button('quick',async()=>setRoom(await api('quick',{})));button('refresh',loadRooms);loadRooms();return;}
  const m=room.match;app.innerHTML=`<div class="row room-header"><h1>${names[room.settings.theme]}</h1><span class="card row">Oda ${esc(room.code)} <button id="copyCode" class="secondary" aria-label="Oda kodunu kopyala">Kopyala</button><span id="copyStatus" role="status" aria-live="polite"></span></span><span>${!m?`${room.settings.budget} para · `:''}${room.settings.seconds} sn</span></div><div class="phase-label">${!m?'Lobi':{basic:'Temel seçim',extra:'Ekstra açık artırma',build:'Kombinasyon',results:'Sonuç'}[m.phase]}</div><details class="players-toggle" ${!m?'open':''}><summary>Oyuncular · ${room.players.length}</summary><div class="grid player-grid">${(m?.players??room.players).map(p=>`<div class="card player-card ${p.id===me.id?'self':''}"><span class="avatar">${esc(p.name.slice(0,1).toLocaleUpperCase('tr-TR'))}</span><strong>${esc(p.name)}${p.id===room.host?' 👑':''}</strong>${!m?`<p class="money">${p.id===room.host?'Oda sahibi':p.ready?'✓ Hazır':'Hazırlanıyor'}</p>`:m.phase==='basic'?`<p class="money">Temel bakiye: ${p.basic}</p>`:m.phase==='extra'?`<p class="money">Ekstra bakiye: ${p.extra}</p>`:''}${m?`<details class="inventory"><summary>${p.inventory.length} ürün</summary><small>${p.inventory.map(x=>esc(x.name)).join(', ')}</small></details>`:''}</div>`).join('')}</div></details><section id="stage" class="panel"></section>`;
@@ -47,5 +73,5 @@ function render(){
  connectionStatus();updateTimer();
 }
 async function loadRooms(){try{const res=await fetch('/api/rooms');if(res.status===401){stream?.close();me=null;room=null;localStorage.removeItem('auctionUser');render();return;}const rows=await res.json();if(!Array.isArray(rows)){error.textContent=rows.error;return;}const target=document.querySelector('#rooms');if(!target)return;target.innerHTML=rows.map(r=>`<div class="card"><h2>${names[r.settings.theme]}</h2><p>${r.count}/6 oyuncu · ${r.settings.seconds} sn</p><button data-room="${esc(r.code)}" ${r.started?'disabled':''}>${r.started?'Maç başladı':'Katıl'}</button></div>`).join('')||'<div class="empty-state"><span aria-hidden="true">🪑</span><h3>İlk masa senden.</h3><p>Şu an açık oda yok. Bir oda kurup arkadaşlarını davet edebilirsin.</p></div>';target.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>api('join',{code:b.dataset.room}).then(setRoom).catch(()=>{}));}catch(e){error.textContent=e.message;}}
-function updateTimer(){const el=document.querySelector('#timer');if(el&&room?.match?.deadline){const seconds=Math.max(0,Math.ceil((room.match.deadline-Date.now())/1000));el.textContent=seconds+' saniye';el.classList.toggle('urgent',seconds<=3);}}
-setInterval(updateTimer,200);if(me){document.cookie=`auction=${me.token}; SameSite=Strict; Path=/`;events();}render();
+function updateTimer(){const el=document.querySelector('#timer');if(el&&room?.match?.deadline){const seconds=Math.max(0,Math.ceil((room.match.deadline-Date.now()-clockOffset)/1000));el.textContent=seconds+' saniye';el.classList.toggle('urgent',seconds<=3);}}
+setInterval(updateTimer,200);if(me){events();}render();

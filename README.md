@@ -1,16 +1,28 @@
-# Auction Game — yerel prototip
+# Auction Game
 
-Node.js 22 veya üzeri ile ek paket kurulmadan çalışır.
+## Yerel çalıştırma
+Node.js 22 veya üzeri:
 
 ```
+npm ci
 node --test
 node server.js
 ```
 
-Tarayıcıda http://127.0.0.1:3000 açın. İkinci oyuncu için farklı bir tarayıcı profili veya gizli pencere kullanın (aynı profildeki sekmeler aynı misafir oturumudur). İlk oyuncu oda kurar, diğeri açık listeden veya kodla katılır. Diğer oyuncu hazır olur, oda sahibi doğrudan başlatır.
+http://127.0.0.1:3000 adresini açın. İkinci oyuncu farklı bir tarayıcı profili kullanmalıdır. Diğer oyuncular hazır olur; oda sahibi maçı doğrudan başlatır.
 
-Bu sürüm motor ve yerel çok oyunculu dikey dilimdir. Üretim yayını değildir. Sunucu yalnızca yerel arayüze bağlıdır. Oda ve oturumlar bellekte tutulur, restartta silinir. Temel ödeme/eşitlik, iki cüzdan, gizli teklifler, açık teklifler, süre uzatma ve elle kombinasyon hazırdır.
+## Vercel yayını
+- GitHub: https://github.com/cranketz/auction-game
+- Hedef: oyun.redodesign.art (ana siteden ayrı proje)
+- Framework: Other; çıktı: public; API: api/[...path].js; bölge: Frankfurt.
+- Vercel Marketplace üzerinden ayrı Neon Free veritabanını projeye bağlayın. DATABASE_URL sadece sunucuda kullanılmalıdır.
+- GitHub main güncellemeleri Vercel proje bağlantısından otomatik yayımlanır.
+- Yerelde aynı veritabanını denemek için gizli .env.local ile node --env-file=.env.local server.js çalıştırın. Ortam dosyalarını Git'e eklemeyin.
 
-Kahvaltı: 16 temel ve 16 ekstra model, ürün ipuçları, eşit temel katkı, ikili/üçlü uyumlar ve maç sonunda ayrıntılı puan dökümü. Puanlar hazırlama ve satın alımda gösterilmez. Diğer temalarda geçici puanlama: Farklı ürünlerin temel puanları ve tamamlanan temel set için +15. Çorbada taban ve ana malzeme yoksa 0. Bilgisayarın gerçek uyumluluk kuralları ve çorbanın gizli uyumları henüz yoktur. Kartlar metin tabanlıdır. Kalıcılık, bağlantı/yönetim devri, oda temizliği, hız sınırları, hazır ifadeler, ses, katalog ekranı ve gerçek görseller sonraki aşamalardır. Bu eksikler tamamlanmadan internete açmayın.
+Oda, misafir oturumu ve maç durumu Postgres'te saklanır. Sürüm karşılaştırmalı atomik güncellemeler aynı anda gelen tekliflerin birbirini silmesini önler. Maç süreleri sunucuda kontrol edilir; açık istemcinin güncelleme isteği zamanı dolan turu ilerletir. Hiç kimse bağlı değilse maç sonraki istekte ilerler. İstemciler oyun sırasında yaklaşık 750 ms, lobide 2,5 saniye aralıkla durum alır. Bu ilk küçük ölçekli yayındır: en fazla 5 oda / oda başına 6 kişi. Daha büyük kullanım için oda bazlı depolama ve gerçek zamanlı yayın servisi gerekir.
 
-Planın tamamı PROJE_PLANI.md dosyasında. İlk prototip bilinçli olarak bağımlılıksız JavaScript ve SSE/HTTP kullanıyor; rapordaki TypeScript/React/Socket.IO mimarisi sonraki yapılandırma aşamasında değerlendirilecek. SSE sunucudan canlı güncelleme, HTTP ise komut iletimi sağlar.
+Oturum cookie'si HttpOnly, SameSite=Strict ve yayında Secure'dür; 7 gün geçerlidir. Girişler IP başına 10 dakikada 20 ile sınırlıdır. 6 saattir işlem yapılmayan odalar temizlenir. Ana domain veya diğer projelerin DNS/veritabanı ayarları değiştirilmez.
+
+Kahvaltı 16 temel, 16 ekstra model ve ikili/üçlü uyum puanlaması içerir. Puanlar yalnızca sonuçta gösterilir. Bilgisayar uyumluluğu ve çorbanın gizli uyumları henüz geçici puanlama kullanır. Bağlantısı kopan oda sahibinin otomatik devri henüz yoktur.
+
+Plan: PROJE_PLANI.md. 17 test; servis testi eşzamanlı teklifler ve saklanıp geri yüklenen tam maç akışını kapsar. Ücretsiz planların kullanım kotaları Vercel ve Neon panelinden izlenmelidir.
