@@ -1,5 +1,7 @@
 # Botlu pratik
 
+> Güncel alışveriş kuralı: temel/gizli dağıtım kaldırıldı; bütün ürünler tek bütçeli 90 saniyelik açık artırmadadır. +1 doğrudan teklif verir, herkesin pası turu kapatır. [Güncel kurallar](./ACIK_ARTIRMA_KURALLARI.md). Önceki aşama/süre açıklamaları tarihsel tasarımı anlatır; tema uyum ve puanlama kuralları korunur.
+
 4 Ekim 2026
 
 Ana ekranda tema, bütçe ve süre seçilir. “Tek başına pratik yap” alanında 1, 2 veya 3 bot seçilip pratik odası kurulur. Botlar hazır gelir; kurucu maçı başlatır. Aynı odada tekrar oynanabilir veya devam eden pratikten ayrılınabilir. Ayrılmak pratik odasını kapatıp kapasiteyi serbest bırakır.

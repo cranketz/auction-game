@@ -16,8 +16,8 @@ const publicProduct=p=>{
 };
 export function botObservation(match,id){
  const p=match.player(id);
- return {theme:match.theme,phase:match.phase,round:match.round,basicTotal:groups[match.theme].length,extraIndex:match.extraIndex,
-  products:match.products.map(publicProduct),inventory:p.inventory.map(publicProduct),basic:p.basic,extra:p.extra,price:match.price??0,leader:match.leader??null};
+ return {theme:match.theme,phase:match.phase,round:match.round,basicTotal:groups[match.theme].length,extraIndex:match.extraIndex,auctionIndex:match.auctionIndex,
+  products:match.products.map(publicProduct),inventory:p.inventory.map(publicProduct),basic:p.basic,extra:p.extra,balance:p.balance,price:match.price??0,leader:match.leader??null};
 }
 function fit(theme,p,inventory,seed){
  if(inventory.some(x=>x.modelId===p.modelId&&x.modelId))return -30;
@@ -41,9 +41,10 @@ function fit(theme,p,inventory,seed){
 export function planBot(observation,seed){
  const o=observation,rank=items=>[...items].sort((a,b)=>fit(o.theme,b,o.inventory,seed)-fit(o.theme,a,o.inventory,seed));
  if(o.phase==='basic')return {amount:Math.min(o.basic,Math.floor(o.basic/(o.basicTotal-o.round)*(0.4+noise(seed)*0.3))),preference:rank(o.products).map(p=>p.id)};
- if(o.phase==='extra'){
+ if(o.phase==='extra'||o.phase==='auction'){
   const value=fit(o.theme,o.products[0],o.inventory,seed);
-  return {cap:value<0?0:Math.min(o.extra,Math.max(1,Math.floor(o.extra*(0.12+noise(seed)*0.14)+(value>10?4:0))))};
+  const balance=o.phase==='auction'?o.balance:o.extra;
+  return {cap:value<0?0:Math.min(balance,Math.max(1,Math.floor(balance*(0.12+noise(seed)*0.14)+(value>10?4:0))))};
  }
  if(o.phase==='build'){
   const selected=[],seen=new Set(),add=p=>{if(p&&!seen.has(p.modelId??p.name)){selected.push(p);seen.add(p.modelId??p.name);}};
@@ -63,13 +64,21 @@ export function planBot(observation,seed){
 // Plans and due times survive process restarts and compare-and-set retries.
 export function advanceBots(room,match,now){
  if(!room.practice||!match||match.phase==='results')return false;
- const key=`${match.phase}:${match.round}:${match.extraIndex}`,states=room.botState??={},bots=match.players.filter(p=>p.bot);
+ const key=`${match.phase}:${match.auctionIndex??match.round}:${match.extraIndex}`,states=room.botState??={},bots=match.players.filter(p=>p.bot);
  let changed=false,extraAction=false;
  for(const bot of bots){
   let state=states[bot.id];const seed=bot.id+':'+key;
   if(state?.key!==key){state=states[bot.id]={key,nextAt:now+delay(seed),done:false,...planBot(botObservation(match,bot.id),seed)};changed=true;}
   if(state.done||now<state.nextAt)continue;
-  if(match.phase==='extra'){
+  if(match.phase==='auction'){
+   if(now>=match.deadline||extraAction||match.passed.includes(bot.id))continue;
+   if(match.leader===bot.id){if(match.passed.length!==match.players.length-1)continue;}
+   else if(match.price<state.cap){
+    match.bidAuction(bot.id,{productId:match.products[0].id,increment:true},now);state.nextAt=now+delay(seed+':'+match.price);changed=true;extraAction=true;continue;
+   }
+   match.passAuction(bot.id,match.products[0].id,now);state.done=true;changed=true;extraAction=true;
+   if(`${match.phase}:${match.auctionIndex??match.round}:${match.extraIndex}`!==key)break;
+  }else if(match.phase==='extra'){
    if(extraAction||now>=match.deadline||match.leader===bot.id||match.price>=state.cap)continue;
    const amount=Math.min(state.cap,match.price+1+Math.floor(noise(seed+':'+match.price)*5));
    match.bidExtra(bot.id,amount,now);state.nextAt=now+delay(seed+':'+amount);changed=true;extraAction=true;

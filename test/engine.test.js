@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {Match} from '../src/engine.js';
+import {LegacyMatch as Match} from '../src/engine.js';
 const players = [{id:'a',name:'A'},{id:'b',name:'B'},{id:'c',name:'C'}];
 test('basic allocation pays each own bid and keeps wallets separate', () => {
   const m = new Match(players, {}, 0); m.priority = ['a','b','c']; const pref = m.products.map(p => p.id);

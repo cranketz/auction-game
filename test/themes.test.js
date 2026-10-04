@@ -4,7 +4,7 @@ import {readFile,readdir} from 'node:fs/promises';
 import {COMPUTER,createComputerKits,scoreComputer} from '../src/computer.js';
 import {SOUP,scoreSoup} from '../src/soup.js';
 import {computerStatus} from '../public/theme-rules.js';
-import {Match,THEMES} from '../src/engine.js';
+import {LegacyMatch as Match,THEMES} from '../src/engine.js';
 import {preparationHint,themeResultDetails,scoreChart} from '../public/ui.js';
 const pc=(...ids)=>ids.map(id=>({...COMPUTER.find(p=>p.modelId===id)}));
 const soup=(...ids)=>ids.map(id=>({...SOUP.find(p=>p.modelId===id)}));

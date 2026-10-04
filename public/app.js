@@ -5,7 +5,7 @@ import {buildLimit,nextSelection,validAmount,bidChanged,resultRank} from './inte
 
 const app=document.querySelector('#app'),error=document.querySelector('#error');
 const names={kahvalti:'Kahvaltı',bilgisayar:'Bilgisayar',corba:'Çorba'};
-const practiceMarkup='<details class="practice-options" data-ui-key="practice-options"><summary>Tek başına pratik yap</summary><p>Seçtiğin tema, bütçe ve süreyle botlara karşı oyna.</p><label for="botCount">Bot sayısı</label><select id="botCount"><option value="1">1 bot</option><option value="2">2 bot</option><option value="3">3 bot</option></select><button id="practice" class="secondary">Pratik odası kur</button><small>Botlar normal oyun kurallarına uyar. Bu oda açık masalarda görünmez.</small></details>';
+const practiceMarkup='<details class="practice-options" data-ui-key="practice-options"><summary>Tek başına pratik yap</summary><p>Seçtiğin tema ve bütçeyle botlara karşı oyna.</p><label for="botCount">Bot sayısı</label><select id="botCount"><option value="1">1 bot</option><option value="2">2 bot</option><option value="3">3 bot</option></select><button id="practice" class="secondary">Pratik odası kur</button><small>Botlar normal oyun kurallarına uyar. Bu oda açık masalarda görünmez.</small></details>';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let me=null;
 try{const saved=JSON.parse(localStorage.getItem('auctionUser')||'null');if(saved?.id&&saved?.name)me=saved;}catch{localStorage.removeItem('auctionUser');}
@@ -30,7 +30,7 @@ async function api(path,data){
   const result=await res.json();if(!res.ok)throw Error(result.error||'İşlem tamamlanamadı.');mutationRevision++;return result;
  }catch(cause){
   const message=['TimeoutError','TypeError'].includes(cause.name)?'Sunucu yanıtı alınamadı. Yeniden bağlanınca işlem durumunu kontrol et.':cause.message;
-  if(['basic','bid','build'].includes(path))showFeedback(message,'error');else error.textContent=message;
+  if(['basic','bid','pass','build'].includes(path))showFeedback(message,'error');else error.textContent=message;
   throw Error(message);
  }
 }
@@ -42,17 +42,20 @@ function syncControls(){
  app.querySelectorAll('[data-select]').forEach(button=>{button.disabled=buildPending||pending.size>0||!connected||expired||m?.finished.includes(me?.id);});
  const submit=document.querySelector('#submit'),amount=document.querySelector('#amount');
  if(submit&&current){
-  const minimum=m.phase==='extra'?m.price+1:0,balance=m.phase==='extra'?current.extra:current.basic;
-  const ownLeader=m.phase==='extra'&&m.leader===me.id;
-  submit.disabled=!connected||expired||pending.size>0||ownLeader||!validAmount(amount.value,balance,minimum);
-  if(m.phase==='extra'){
-   setText(document.querySelector('#offerHelp'),ownLeader?'Şu an en yüksek teklif sende. Rakip geçerse tekrar teklif verebilirsin.':balance<minimum?'Bakiyen bu ürün için yeni teklif vermeye yetmiyor.':`En az ${minimum} para teklif et. Düğmeler tutarı değiştirir; göndermek için Teklif ver'e bas.`);
+  const auction=['auction','extra'].includes(m.phase),minimum=auction?m.price+1:0,balance=m.auctionVersion?current.balance:m.phase==='extra'?current.extra:current.basic;
+  const ownLeader=auction&&m.leader===me.id,passed=m.passed?.includes(me.id);
+  submit.disabled=!connected||expired||pending.size>0||ownLeader||passed||!validAmount(amount.value,balance,minimum);
+  if(auction){
+   setText(document.querySelector('#offerHelp'),passed?'Bu ürün için pas geçtin. Yeni üründe tekrar teklif verebilirsin.':ownLeader?'Şu an en yüksek teklif sende. Rakip geçerse tekrar teklif verebilirsin.':balance<minimum?'Bakiyen bu ürün için yeni teklif vermeye yetmiyor.':`En az ${minimum} TL teklif et. +1 düğmesi teklifi hemen gönderir.`);
    app.querySelectorAll('[data-add]').forEach(button=>{button.disabled=!connected||expired||ownLeader||pending.size>0||balance<minimum;});
   }else{
    const status=document.querySelector('#basicStatus');
    setText(status,bidChanged(m.ownBid,amount.value,preference)?'Değişiklikler kaydedilmedi. Teklifini yeniden kaydet.':m.ownBid?'✓ Teklifin kaydedildi. Süre bitene kadar güncelleyebilirsin.':'Teklifin gizli kalır. Göndermezsen 0 kabul edilir.');
   }
  }
+ const raise=document.querySelector('#raise'),pass=document.querySelector('#pass');
+ if(raise&&current){raise.disabled=!connected||expired||pending.size>0||m.leader===me.id||m.passed?.includes(me.id)||m.price+1>(current.balance??current.extra);}
+ if(pass)pass.disabled=!connected||expired||pending.size>0||m.passed?.includes(me.id);
  const finish=document.querySelector('#finish');if(finish)finish.disabled=buildPending||pending.size>0||!connected||expired||m.finished.includes(me.id);
  const status=document.querySelector('#requestStatus');setText(status,pending.size||buildPending?'Kaydediliyor…':'');
 }
@@ -76,7 +79,7 @@ function events(){
    if(next?.match?.serverNow)clockOffset=next.match.serverNow-Date.now();
    const signature=JSON.stringify(next,(key,value)=>key==='serverNow'?undefined:value);
    if(signature!==lastState||!wasConnected){
-    const outbid=next?.match?.phase==='extra'&&lastLeader===me.id&&next.match.leader&&next.match.leader!==me.id;
+    const outbid=['auction','extra'].includes(next?.match?.phase)&&room?.match?.products[0]?.id===next?.match?.products[0]?.id&&lastLeader===me.id&&next.match.leader&&next.match.leader!==me.id;
     lastLeader=next?.match?.leader??null;lastState=signature;room=next;render();if(outbid)showFeedback('Rakip seni geçti. Teklifini artırabilirsin.','warning');
    }
    connectionStatus();
@@ -95,14 +98,14 @@ function snapshotUI(){
 }
 function restoreUI(saved){
  if(saved.screen!==app.dataset.screen||saved.key!==roundKey){
-  if(saved.screen&&saved.ownsFocus){const heading=app.querySelector('#stage h2')??app.querySelector('h1');heading?.setAttribute('tabindex','-1');heading?.focus({preventScroll:false});}
+  if(saved.screen&&saved.ownsFocus){const heading=app.querySelector('#stage h2')??app.querySelector('h1');heading?.setAttribute('tabindex','-1');heading?.focus({preventScroll:true});app.scrollIntoView({block:'start'});}
   return;
  }
  for(const [id,value]of saved.fields){const field=document.getElementById(id);if(field)field.value=value;}
  for(const [key,open]of saved.details){const detail=Array.from(app.querySelectorAll('details')).find((el,i)=>(el.dataset.uiKey??String(i))===key);if(detail)detail.open=open;}
  const focus=saved.focus;
  let target=focus?.id?document.getElementById(focus.id):focus?.product?app.querySelector(`[data-select="${CSS.escape(focus.product)}"][data-location="${focus.location}"]`)??app.querySelector(`[data-select="${CSS.escape(focus.product)}"][data-location="inventory"]`):focus?.move?app.querySelector(`[data-product="${CSS.escape(focus.move)}"][data-direction="${focus.direction}"]:not(:disabled)`)??app.querySelector(`[data-product="${CSS.escape(focus.move)}"]:not(:disabled)`):focus?.add?app.querySelector(`[data-add="${focus.add}"]`):focus?.detail?Array.from(app.querySelectorAll('details')).find((el,i)=>(el.dataset.uiKey??String(i))===focus.detail)?.querySelector('summary'):null;
- if(target?.disabled){target=app.querySelector('#amount')??app.querySelector('#stage h2');if(target?.tagName==='H2')target.setAttribute('tabindex','-1');}target?.focus({preventScroll:true});syncControls();
+ if(target?.disabled){target=app.querySelector('#amount')?.offsetParent?app.querySelector('#amount'):app.querySelector('#stage h2');if(target?.tagName==='H2')target.setAttribute('tabindex','-1');}target?.focus({preventScroll:true});syncControls();
 }
 function render(){
  const saved=snapshotUI();if(pendingFocus?.key===roundKey){saved.focus=pendingFocus.focus;saved.ownsFocus=true;}app.dataset.screen=!me?'welcome':!room?'home':room.match?.phase??'lobby';
@@ -112,30 +115,21 @@ function render(){
   button('login',async()=>{const input=document.querySelector('#name');if(input.value.trim().length<2){error.textContent='Takma adın en az 2 karakter olmalı.';input.focus();return;}me=await api('session',{name:input.value});localStorage.setItem('auctionUser',JSON.stringify(me));connected=true;render();events();});connectionStatus();return;
  }
  if(!room){
-  roundKey='';app.innerHTML=`<div class="page-title"><div><span class="eyebrow">OYUN ALANI</span><h1>Bir masa seç.</h1><p>Bir oda kur, davet koduyla katıl veya yeni rakipler bul.</p></div><span class="profile-chip">${esc(me.name)}</span></div><div class="home-layout"><section class="panel create-panel"><h2>Yeni oda kur</h2><div class="row"><label>Tema<select id="theme">${Object.entries(names).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><label>Bütçe<select id="budget"><option>50</option><option selected>100</option><option>150</option></select></label><label>Teklif süresi<select id="seconds"><option value="20">20 saniye</option><option value="30" selected>30 saniye</option><option value="45">45 saniye</option></select></label><label>Görünürlük<select id="visibility"><option value="true">Herkese açık</option><option value="false">Özel</option></select></label></div><p class="offer-help">Seçtiğin bütçe temel ve ekstra alışveriş için ayrı ayrı verilir.</p><button id="create">Oda kur</button>${practiceMarkup}</section><details class="panel join-panel" data-ui-key="join" ${matchMedia("(min-width: 701px)").matches?"open":""}><summary>Davetle katıl</summary><div class="join-content"><label for="code">Oda kodu</label><input id="code" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="8 karakterli kod"><button id="join">Odaya katıl</button><p class="offer-help">Kodun yoksa açık masalara bakabilirsin.</p><button id="quick" class="secondary">Hızlı katıl</button></div></details></div><details class="rooms-browser" data-ui-key="rooms" ${matchMedia("(min-width: 701px)").matches?"open":""}><summary>Açık masalar</summary><div class="section-title"><h2>Açık masalar</h2><button id="refresh" class="secondary">Yenile</button></div><div id="rooms" class="grid room-grid" aria-label="Katılabileceğin odalar"></div></details>`;
-  button('create',async()=>setRoom(await api('create',{theme:document.querySelector('#theme').value,budget:+document.querySelector('#budget').value,seconds:+document.querySelector('#seconds').value,public:document.querySelector('#visibility').value==='true'})));
-  button('practice',async()=>setRoom(await api('create',{theme:document.querySelector('#theme').value,budget:+document.querySelector('#budget').value,seconds:+document.querySelector('#seconds').value,practice:true,bots:Number(document.querySelector('#botCount').value)})));
+  roundKey='';app.innerHTML=`<div class="page-title"><div><span class="eyebrow">OYUN ALANI</span><h1>Bir masa seç.</h1><p>Bir oda kur, davet koduyla katıl veya yeni rakipler bul.</p></div><span class="profile-chip">${esc(me.name)}</span></div><div class="home-layout"><section class="panel create-panel"><h2>Yeni oda kur</h2><div class="row"><label>Tema<select id="theme">${Object.entries(names).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><label>Bütçe<select id="budget"><option>50</option><option selected>100</option><option>150</option></select></label><div class="room-duration"><span>Tur süresi</span><strong>90 saniye</strong></div><label>Görünürlük<select id="visibility"><option value="true">Herkese açık</option><option value="false">Özel</option></select></label></div><p class="offer-help">Bütün ürünler tek bütçeyle açık artırmada alınır.</p><button id="create">Oda kur</button>${practiceMarkup}</section><details class="panel join-panel" data-ui-key="join" ${matchMedia("(min-width: 701px)").matches?"open":""}><summary>Davetle katıl</summary><div class="join-content"><label for="code">Oda kodu</label><input id="code" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="8 karakterli kod"><button id="join">Odaya katıl</button><p class="offer-help">Kodun yoksa açık masalara bakabilirsin.</p><button id="quick" class="secondary">Hızlı katıl</button></div></details></div><details class="rooms-browser" data-ui-key="rooms" ${matchMedia("(min-width: 701px)").matches?"open":""}><summary>Açık masalar</summary><div class="section-title"><h2>Açık masalar</h2><button id="refresh" class="secondary">Yenile</button></div><div id="rooms" class="grid room-grid" aria-label="Katılabileceğin odalar"></div></details>`;
+  button('create',async()=>setRoom(await api('create',{theme:document.querySelector('#theme').value,budget:+document.querySelector('#budget').value,seconds:90,public:document.querySelector('#visibility').value==='true'})));
+  button('practice',async()=>setRoom(await api('create',{theme:document.querySelector('#theme').value,budget:+document.querySelector('#budget').value,seconds:90,practice:true,bots:Number(document.querySelector('#botCount').value)})));
   button('join',async()=>{const code=document.querySelector('#code').value.trim().toUpperCase();if(code.length!==8){error.textContent='8 karakterli oda kodunu yaz.';document.querySelector('#code').focus();return;}setRoom(await api('join',{code}));});
   button('quick',async()=>setRoom(await api('quick',{})));button('refresh',loadRooms);loadRooms();connectionStatus();return;
  }
  const m=room.match;
- const key=m?`${room.code}:${m.phase}:${m.round}:${m.extraIndex}`:`${room.code}:lobby`;
+ const key=m?`${room.code}:${m.phase}:${m.auctionIndex??m.round}:${m.extraIndex}`:`${room.code}:lobby`;
  if(key!==roundKey){roundKey=key;feedback=null;preference=[...(m?.ownBid?.preference??m?.products.map(p=>p.id)??[])];selection=[...(m?.ownBuild??[])];basicDraft=m?.ownBid?.amount??0;extraDraft='';}
- app.innerHTML=`<div class="room-header row"><div><h1>${names[room.settings.theme]}</h1><span class="room-meta">${room.practice?'Botlu pratik':room.public?'Herkese açık':'Özel oda'} · ${room.settings.seconds} saniyelik teklifler</span></div>${room.practice?'<div class="practice-label"><strong>Pratik modu</strong><span>'+room.players.filter(p=>p.bot).length+' bot rakip · Yalnızca sen</span></div>':'<div class="room-code"><span>Oda kodu</span><code>'+esc(room.code)+'</code><button id="copyCode" class="secondary" aria-label="Oda kodunu kopyala">Kopyala</button></div>'}</div>${m?matchProgress(m):'<div class="phase-label">Lobi</div>'}<details class="players-toggle" data-ui-key="players" ${!m&&matchMedia("(min-width: 701px)").matches?'open':''}><summary>Oyuncular · ${room.players.length}/6</summary><div class="grid player-grid">${(m?.players??room.players).map(p=>`<article class="card player-card ${p.id===me.id?'self':''}"><span class="avatar" aria-hidden="true">${esc(p.name.slice(0,1).toLocaleUpperCase('tr-TR'))}</span><strong>${esc(p.name)} ${p.bot?'<span class="bot-badge">Bot</span>':''} ${p.id===room.host?'<span title="Oda sahibi" aria-label="Oda sahibi">👑</span>':''}${p.id===me.id?' · Sen':''}</strong><small class="presence ${p.online?'online':'offline'}">${p.bot?'Otomatik oyuncu':p.online?'● Çevrimiçi':'○ Bağlantısı kesildi'}</small>${!m?`<p class="money">${p.id===room.host?'Oda sahibi':p.ready?'✓ Hazır':'Hazırlanıyor'}</p>`:m.phase==='basic'?`<p class="money">Temel bakiye: ${p.basic}</p>`:m.phase==='extra'?`<p class="money">Ekstra bakiye: ${p.extra}</p>`:''}${m?`<details class="inventory" data-ui-key="inventory-${p.id}"><summary>${p.inventory.length} ürün</summary><ul>${p.inventory.map(x=>`<li>${esc(x.name)}</li>`).join('')||'<li>Henüz ürün yok.</li>'}</ul></details>`:''}</article>`).join('')}</div></details>${m&&m.phase!=='results'?dockMarkup(m):''}<section id="stage" class="panel"></section>`;
- // Keep actions before optional room information in DOM and keyboard order.
- if(m){
-  const players=app.querySelector('.players-toggle'),code=app.querySelector('.room-code');
-  players.querySelector('summary').textContent='Oda ve oyuncular · '+room.players.length;
-  if(code)players.querySelector('summary').after(code);
-  app.querySelector('#stage').after(players);
- }else if(matchMedia('(max-width: 700px)').matches){
-  app.querySelector('#stage').after(app.querySelector('.players-toggle'));
- }
+ app.innerHTML=`<div class="room-header row"><div><h1>${names[room.settings.theme]}</h1><span class="room-meta">${room.practice?'Botlu pratik':room.public?'Herkese açık':'Özel oda'} · ${m&&!m.auctionVersion?'Önceki maç kuralları': '90 saniyelik turlar'}</span></div>${room.practice?'':'<div class="room-code"><code>'+esc(room.code)+'</code><button id="copyCode" class="secondary" aria-label="Oda kodunu kopyala">Kopyala</button></div>'}</div>${m?playersMarkup(m)+matchProgress(m):'<div class="phase-label">Lobi</div>'}<section id="stage" class="panel"></section>${!m?'<div class="lobby-players">'+room.players.map(p=>'<span>'+esc(p.name)+(p.bot?' · Bot':p.id===room.host?' · Kurucu':p.ready?' · Hazır':' · Hazırlanıyor')+'</span>').join('')+'</div>':''}`;
  button('copyCode',async()=>{try{await navigator.clipboard.writeText(room.code);announce('Oda kodu kopyalandı.');}catch{error.textContent='Kod kopyalanamadı. Görünen kodu seçip elle kopyalayabilirsin.';}});
  const stage=document.querySelector('#stage');
  if(!m){renderLobby(stage);connectionStatus();return;}
  if(m.phase==='basic')renderBasic(stage,m);
- else if(m.phase==='extra')renderExtra(stage,m);
+ else if(['auction','extra'].includes(m.phase))renderExtra(stage,m);
  else if(m.phase==='build')renderBuild(stage,m);
  else renderResults(stage,m);
  const feedbackEl=document.createElement('p');feedbackEl.id='actionFeedback';feedbackEl.setAttribute('role','status');feedbackEl.setAttribute('aria-live','polite');stage.append(feedbackEl);
@@ -146,9 +140,8 @@ function render(){
  }
  connectionStatus();updateTimer();
 }
-function dockMarkup(m){
- const p=m.players.find(p=>p.id===me.id),balance=m.phase==='basic'?`Temel bakiye: ${p.basic}`:m.phase==='extra'?`Ekstra bakiye: ${p.extra}`:'Ürünlerini seçerek kombinasyonunu kur';
- return `<aside class="player-dock" aria-label="Senin durumun"><div><strong>${esc(p.name)} · Sen</strong><span>${balance}</span></div><details data-ui-key="own-inventory"><summary>${p.inventory.length} ürünün</summary><ul>${p.inventory.map(p=>`<li>${esc(p.name)}</li>`).join('')||'<li>Henüz ürün almadın.</li>'}</ul></details></aside>`;
+function playersMarkup(m){
+ return '<section class="player-overview" aria-label="Oyuncular, bakiyeler ve alınan ürünler">'+m.players.map(p=>'<article class="player-summary '+(p.id===me.id?'self':'')+'"><div><strong>'+esc(p.name)+(p.bot?' · Bot':'')+(p.id===me.id?' · Sen':'')+'</strong><b>'+esc(p.balance??(m.phase==='basic'?p.basic:p.extra))+' TL</b></div><small class="auction-player-state">'+(['auction','extra'].includes(m.phase)?(m.passed?.includes(p.id)?'Pas geçti':m.leader===p.id?'En yüksek teklif':''):m.phase==='build'&&m.finished.includes(p.id)?'Tamamladı':'')+'</small><p class="latest-purchase">'+(p.inventory.length?'Son: '+esc(p.inventory.at(-1).name):'Henüz ürün yok')+'</p><details data-ui-key="purchases-'+p.id+'"><summary>'+p.inventory.length+' ürün</summary><ul>'+p.inventory.map(x=>'<li>'+esc(x.name)+'</li>').join('')+'</ul></details></article>').join('')+'</section>';
 }
 function renderLobby(stage){
  const p=room.players.find(p=>p.id===me.id),others=room.players.filter(p=>p.id!==room.host),ready=others.filter(p=>p.ready&&p.online).length;
@@ -167,11 +160,12 @@ function renderBasic(stage,m){
  button('submit',async()=>{setRoom(await api('basic',{amount:Number(basicDraft),preference}));showFeedback('Gizli teklifin kaydedildi.');});
 }
 function renderExtra(stage,m){
- const p=m.products[0],ownLeader=m.leader===me.id;
- stage.innerHTML=`<div class="auction-heading"><h2>${esc(p.name)}</h2>${timerMarkup}</div><div class="auction-symbol" aria-hidden="true">${productArt(p)}</div><p class="basic-help">${esc(p.hint??'')}</p><div class="auction-price"><span>EN YÜKSEK TEKLİF</span><strong>${m.price}<small> para</small></strong></div><p class="auction-leader ${ownLeader?'leading':''}">${ownLeader?'✓ Şu an öndesin':m.leader?`Önde: ${esc(m.players.find(p=>p.id===m.leader).name)}`:'Henüz teklif yok'}</p><label for="amount" class="bid-label">Toplam teklifin</label><div class="bid-controls">${[-10,-5,-1,1,5,10].map(n=>`<button data-add="${n}" type="button" aria-label="Teklif tutarını ${Math.abs(n)} ${n>0?'artır':'azalt'}">${n>0?'+':''}${n}</button>`).join('')}<input id="amount" type="number" inputmode="numeric" step="1" min="${m.price+1}" max="${m.players.find(p=>p.id===me.id).extra}" value="${esc(extraDraft)}" aria-describedby="offerHelp" placeholder="En az ${m.price+1}"><button id="submit">Teklif ver</button></div><p id="offerHelp" class="offer-help"></p>`;
+ const p=m.products[0],ownLeader=m.leader===me.id,passed=m.passed?.includes(me.id),current=m.players.find(p=>p.id===me.id);
+ stage.innerHTML=`<div class="auction-heading"><h2>${esc(p.name)}</h2>${timerMarkup}</div><div class="auction-symbol" aria-hidden="true">${productArt(p)}</div><p class="basic-help">${esc(p.hint??'')}</p><div class="auction-price"><span>EN YÜKSEK TEKLİF</span><strong>${m.price}<small> TL</small></strong></div><p class="auction-leader ${ownLeader?'leading':''}">${ownLeader?'✓ En yüksek teklif sende':m.leader?'Önde: '+esc(m.players.find(p=>p.id===m.leader).name):'Henüz teklif yok'}</p><div class="auction-actions"><button id="raise" aria-label="Mevcut teklifin 1 TL üstünü hemen ver">${m.price+1} TL teklif ver <span>(+1)</span></button>${m.auctionVersion?'<button id="pass" class="secondary">'+(passed?'Pas geçtin':'Pas geç')+'</button>':''}</div>${m.auctionVersion?'<p class="pass-help">'+m.passed.length+'/'+m.players.length+' oyuncu pas geçti. Herkes pas geçince son teklif sahibi alır. Pas bu ürün için geçerlidir.</p>':''}<details class="custom-bid" data-ui-key="custom-bid"><summary>Özel tutar teklif et</summary><label for="amount">Toplam teklifin</label><div class="custom-bid-controls"><input id="amount" type="number" inputmode="numeric" step="1" min="${m.price+1}" max="${current.balance??current.extra}" value="${esc(extraDraft)}" aria-describedby="offerHelp" placeholder="En az ${m.price+1} TL"><button id="submit">Teklif ver</button></div></details><p id="offerHelp" class="offer-help"></p>`;
  const input=document.querySelector('#amount');input.addEventListener('input',()=>{extraDraft=input.value;syncControls();});
- stage.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const base=input.value===''?m.price:Number(input.value);extraDraft=Math.max(0,Math.min(m.players.find(p=>p.id===me.id).extra,(Number.isFinite(base)?base:m.price)+Number(b.dataset.add)));input.value=extraDraft;syncControls();});
- button('submit',async()=>{setRoom(await api('bid',{amount:Number(extraDraft)}));showFeedback('Teklifin kabul edildi. Şu an öndesin.');});
+ button('raise',async()=>{setRoom(await api('bid',m.auctionVersion?{productId:p.id,increment:true}:{amount:m.price+1}));showFeedback('Teklifin kabul edildi.');});
+ button('submit',async()=>{setRoom(await api('bid',{productId:p.id,amount:Number(extraDraft)}));showFeedback('Teklifin kabul edildi.');});
+ button('pass',async()=>{const index=m.auctionIndex;setRoom(await api('pass',{productId:p.id}));if(room.match.auctionIndex===index)showFeedback('Bu ürün için pas geçtin.');});
 }
 function renderBuild(stage,m){
  const p=m.players.find(p=>p.id===me.id),locked=m.finished.includes(me.id),limit=buildLimit(m.theme);
@@ -196,7 +190,7 @@ function resultDetails(r){
 }
 function renderLastRound(stage,m){
  const last=m.history.at(-1),allocation=last.type==='basic'?last.allocation.find(a=>a.playerId===me.id):null;
- const text=allocation?`${allocation.product.name} aldın · ${allocation.amount} para`:last.playerId===me.id?`${last.product.name} senin · ${last.amount} para`:last.playerId?`${last.product.name}: ${m.players.find(p=>p.id===last.playerId)?.name} aldı · ${last.amount} para`:`${last.product.name} satılmadı`;
+ const text=allocation?`${allocation.product.name} aldın · ${allocation.amount} para`:last.playerId===me.id?`${last.product.name} senin · ${last.amount} ${m.auctionVersion?'TL':'para'}`:last.playerId?`${last.product.name}: ${m.players.find(p=>p.id===last.playerId)?.name} aldı · ${last.amount} ${m.auctionVersion?'TL':'para'}`:`${last.product.name} satılmadı`;
  const detail=document.createElement('details');detail.className='round-summary';detail.dataset.uiKey=`history-${m.history.length}`;detail.innerHTML=`<summary>Son tur · ${esc(text)}</summary>${last.type==='basic'?`<ol>${last.allocation.map(a=>`<li>${esc(m.players.find(p=>p.id===a.playerId)?.name)} · ${esc(a.product.name)} · ${a.amount} para</li>`).join('')}</ol><small>Yüksek teklif önce seçer. Eşitlikte öncelik sırası kullanılır.</small>`:''}`;stage.append(detail);
 }
 async function leaveRoom(){await api('leave',{});room=null;roundKey='';error.textContent='';render();}

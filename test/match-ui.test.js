@@ -5,11 +5,11 @@ import {matchProgress,resultSummary} from '../public/match-ui.js';
 test('progress exposes totals without revealing upcoming products',()=>{
  const m=new Match([{id:'a',name:'A'},{id:'b',name:'B'}],{theme:'corba'});
  const snapshot=m.snapshot('a');
- assert.equal(snapshot.basicTotal,3);assert.equal(snapshot.extraTotal,4);
- assert.match(matchProgress(snapshot),/Tur 1\/3/);
- snapshot.phase='extra';snapshot.extraIndex=3;
- assert.match(matchProgress(snapshot),/Ürün 4\/4/);
- assert.match(matchProgress(snapshot),/0 ekstra kaldı/);
+ assert.equal(snapshot.auctionTotal,10);assert.equal(snapshot.auctionQueue,undefined);
+ assert.match(matchProgress(snapshot),/Ürün 1\/10/);
+ snapshot.auctionIndex=9;
+ assert.match(matchProgress(snapshot),/Ürün 10\/10/);
+ assert.match(matchProgress(snapshot),/0 ürün kaldı/);
 });
 test('personal result uses money tie breaker and shared ranks',()=>{
  const results=[{id:'a',name:'<A>',points:20,remaining:10},{id:'b',name:'B',points:20,remaining:10},{id:'c',name:'C',points:20,remaining:5}];

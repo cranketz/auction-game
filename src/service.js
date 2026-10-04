@@ -1,9 +1,9 @@
 import {randomUUID,randomBytes,createHash} from 'node:crypto';
-import {Match,THEMES,OFFER_SECONDS} from './engine.js';
+import {Match,LegacyMatch,THEMES} from './engine.js';
 import {transact} from './store.js';
 import {createBots,advanceBots} from './bots.js';
 const roomFor=(data,id)=>Object.values(data.rooms).find(r=>r.players.some(p=>p.id===id));
-export function restoreMatch(value){if(!value)return null;const match=Object.assign(Object.create(Match.prototype),value);match.finished=new Set(value.finished);return match;}
+export function restoreMatch(value){if(!value)return null;const match=Object.assign(Object.create(value.auctionVersion===1?Match.prototype:LegacyMatch.prototype),value);match.finished=new Set(value.finished);return match;}
 export function saveMatch(match){return match?{...match,finished:[...match.finished]}:null;}
 function view(room,id,now){
   if(!room)return null;
@@ -59,9 +59,9 @@ export async function perform(store,{method,path,token,b={},ip='local',now=Date.
     let room=roomFor(data,user.id);
     if(path==='create'){
       if(room)throw Error('Önce mevcut odadan ayrılın.');if(Object.keys(data.rooms).length>=5)throw Error('Test kapasitesi dolu.');
-      if(!THEMES[b.theme]||![50,100,150].includes(b.budget)||!OFFER_SECONDS.includes(b.seconds))throw Error('Geçersiz ayarlar.');
+      if(!THEMES[b.theme]||![50,100,150].includes(b.budget))throw Error('Geçersiz ayarlar.');
       const bots=b.practice===true?createBots(b.bots):[];
-      const code=randomBytes(4).toString('hex').toUpperCase();room={code,host:user.id,public:bots.length?false:b.public!==false,practice:bots.length>0,settings:{theme:b.theme,budget:b.budget,seconds:b.seconds},players:[],match:null,updatedAt:now};join(data,room,user,now);room.players.push(...bots);data.rooms[code]=room;
+      const code=randomBytes(4).toString('hex').toUpperCase();room={code,host:user.id,public:bots.length?false:b.public!==false,practice:bots.length>0,settings:{theme:b.theme,budget:b.budget,seconds:90},players:[],match:null,updatedAt:now};join(data,room,user,now);room.players.push(...bots);data.rooms[code]=room;
     }else if(path==='join'||path==='quick'){
       const code=String(b.code).toUpperCase();
       room=path==='join'?(Object.hasOwn(data.rooms,code)?data.rooms[code]:null):Object.values(data.rooms).find(r=>r.public&&!r.match&&r.players.length<6);
@@ -70,9 +70,13 @@ export async function perform(store,{method,path,token,b={},ip='local',now=Date.
       if(!room)throw Error('Odada değilsiniz.');const match=restoreMatch(room.match);
       if(path==='ready'){if(match)throw Error('Maç başladı.');room.players.find(p=>p.id===user.id).ready=!!b.ready;}
       else if(path==='start'){
-        if(room.players.length<2)throw Error('Yeterli oyuncu yok. Maçı başlatmak için en az 2 oyuncu gerekli.');if(room.host!==user.id)throw Error('Maçı yalnızca oda sahibi başlatabilir.');if(match)throw Error('Maç zaten başladı.');if(!room.players.filter(p=>p.id!==room.host).every(p=>p.ready&&(p.bot||now-(p.lastSeen??room.updatedAt)<30000)))throw Error('Diğer oyuncular hazır olmalı.');const next=new Match(room.players,room.settings,now);room.botState={};advanceBots(room,next,now);room.match=saveMatch(next);
-      }else if(['basic','bid','build'].includes(path)){
-        if(!match)throw Error('Maç başlamadı.');if(path==='basic')match.submitBasic(user.id,b.amount,b.preference,now);if(path==='bid')match.bidExtra(user.id,b.amount,now);if(path==='build')match.saveBuild(user.id,b.ids,!!b.finish,now);room.match=saveMatch(match);
+        if(room.players.length<2)throw Error('Yeterli oyuncu yok. Maçı başlatmak için en az 2 oyuncu gerekli.');if(room.host!==user.id)throw Error('Maçı yalnızca oda sahibi başlatabilir.');if(match)throw Error('Maç zaten başladı.');if(!room.players.filter(p=>p.id!==room.host).every(p=>p.ready&&(p.bot||now-(p.lastSeen??room.updatedAt)<30000)))throw Error('Diğer oyuncular hazır olmalı.');room.settings.seconds=90;const next=new Match(room.players,room.settings,now);room.botState={};advanceBots(room,next,now);room.match=saveMatch(next);
+      }else if(['basic','bid','pass','build'].includes(path)){
+        if(!match)throw Error('Maç başlamadı.');
+        if(path==='basic'){if(match.auctionVersion===1)throw Error('Gizli temel seçim kaldırıldı.');match.submitBasic(user.id,b.amount,b.preference,now);}
+        if(path==='bid'){if(match.auctionVersion===1)match.bidAuction(user.id,b,now);else match.bidExtra(user.id,b.amount,now);}
+        if(path==='pass'){if(match.auctionVersion!==1)throw Error('Bu eski maçta pas seçeneği yok.');match.passAuction(user.id,b.productId,now);}
+        if(path==='build')match.saveBuild(user.id,b.ids,!!b.finish,now);room.match=saveMatch(match);
       }else if(path==='replay'){if(room.host!==user.id||match?.phase!=='results')throw Error('Yeniden maç açılamaz.');room.match=null;room.botState={};room.players.forEach(p=>p.ready=!!p.bot);}
       else if(path==='leave'){
         if(room.practice){delete data.rooms[room.code];return {changed:true,value:{left:true}};}

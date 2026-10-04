@@ -1,5 +1,7 @@
 # Bilgisayar ve çorba · içerik sürümü 2
 
+> Güncel alışveriş kuralı: temel/gizli dağıtım kaldırıldı; bütün ürünler tek bütçeli 90 saniyelik açık artırmadadır. +1 doğrudan teklif verir, herkesin pası turu kapatır. [Güncel kurallar](./ACIK_ARTIRMA_KURALLARI.md). Önceki aşama/süre açıklamaları tarihsel tasarımı anlatır; tema uyum ve puanlama kuralları korunur.
+
 Bu uygulama plandaki başlangıç taslaklarını oynanabilir hale getirir. Puan değerleri denge testi başlangıcıdır; oyuncu denemeleriyle değiştirilebilir. Gerçek donanım veya yemek bilimi iddiası yoktur.
 
 ## Bilgisayar

@@ -9,13 +9,13 @@ export const THEMES = {
   corba: { name: 'Çorba', groups: ['Sebze', 'Protein / bakliyat', 'Sıvı / taban'], extras: ['Yağ', 'Baharat', 'Kıvam', 'Garnitür'] }
 };
 function requireRule(condition, message) { if (!condition) throw new Error(message); }
-export const OFFER_SECONDS = [20, 30, 45];
-export class Match {
+// Retained only to finish matches saved before the auction-only rule change.
+export class LegacyMatch {
   constructor(players, { theme = 'kahvalti', budget = 100, seconds = 30 } = {}, now = Date.now()) {
     requireRule(players.length >= 2 && players.length <= 6, '2–6 oyuncu gerekli.');
     requireRule(new Set(players.map(p => p.id)).size === players.length, 'Oyuncu kimlikleri farklı olmalı.');
     // Existing lobbies may still contain the previous 8/12-second choices.
-    requireRule(THEMES[theme] && [50,100,150].includes(budget) && [...OFFER_SECONDS,8,12].includes(seconds), 'Geçersiz maç ayarı.');
+    requireRule(THEMES[theme] && [50,100,150].includes(budget) && [8,12,20,30,45].includes(seconds), 'Geçersiz maç ayarı.');
     this.buildSeconds = 90;
     this.contentVersion=2;this.computerKits=theme==='bilgisayar'?createComputerKits(players.length):null;
     this.theme = theme; this.seconds = seconds; this.players = players.map(p => ({...p, basic: budget, extra: budget, inventory: []}));
@@ -115,5 +115,71 @@ export class Match {
     return {theme:this.theme,rulesVersion:this.contentVersion??1, basicTotal:THEMES[this.theme].groups.length, extraTotal:this.players.length*2, phase:this.phase, deadline:this.deadline, serverNow:Date.now(), round:this.round, extraIndex:this.extraIndex, products:visible(this.products),
       players:visible(this.players), priority:this.priority, history:visible(this.history), price:this.price, leader:this.leader,
       ownBid:this.phase === 'basic' ? this.bids[viewerId] ?? null : null, ownBuild:this.builds[viewerId] ?? [], finished:[...this.finished], results:this.results};
+  }
+}
+
+export class Match extends LegacyMatch {
+  constructor(players,{theme='kahvalti',budget=100}={},now=Date.now()){
+    super(players,{theme,budget,seconds:20},now);
+    this.auctionVersion=1;this.seconds=90;this.buildSeconds=90;
+    this.players=players.map(p=>({...p,balance:budget,inventory:[]}));
+    delete this.bids;delete this.priority;
+    const products=[];
+    for(let i=0;i<players.length;i++)for(const [index,group] of THEMES[theme].groups.entries()){
+      products.push(theme==='bilgisayar'?{id:randomUUID(),...COMPUTER.find(p=>p.modelId===this.computerKits[i][index])}:this.product(group,i));
+    }
+    const pool=theme==='kahvalti'?BREAKFAST:theme==='bilgisayar'?COMPUTER:SOUP,extras=pool.filter(p=>!p.basic);
+    for(let i=0;i<players.length*2;i++)products.push({id:randomUUID(),...extras[randomInt(extras.length)]});
+    for(let i=products.length-1;i>0;i--){const j=randomInt(i+1);[products[i],products[j]]=[products[j],products[i]];}
+    this.auctionQueue=products;this.auctionTotal=products.length;this.auctionIndex=0;
+    this.openAuction(now);
+  }
+  openAuction(now){
+    this.phase='auction';this.deadline=now+90000;this.price=0;this.leader=null;this.bidCount=0;this.passed=[];
+    this.products=[this.auctionQueue[this.auctionIndex]];
+  }
+  currentProduct(productId,now){
+    requireRule(this.phase==='auction'&&now<this.deadline,'Açık artırma kapandı.');
+    requireRule(productId===this.products[0].id,'Ürün değişti. Yeni turu kontrol edin.');
+  }
+  bidAuction(id,{productId,amount,increment=false},now=Date.now()){
+    this.currentProduct(productId,now);const p=this.player(id);
+    requireRule(!this.passed.includes(id),'Bu ürün için pas geçtiniz.');
+    requireRule(id!==this.leader,'Zaten en yüksek teklif sizde.');
+    const next=increment===true?this.price+1:amount;
+    requireRule(Number.isInteger(next)&&next>this.price&&next<=p.balance,'Teklif fiyatı aşmalı ve bütçeye sığmalı.');
+    this.price=next;this.leader=id;this.bidCount++;this.deadline+=this.bidCount<=3?3000:1000;
+  }
+  passAuction(id,productId,now=Date.now()){
+    this.currentProduct(productId,now);this.player(id);
+    requireRule(!this.passed.includes(id),'Bu ürün için zaten pas geçtiniz.');
+    this.passed.push(id);
+    if(this.passed.length===this.players.length)this.resolveAuction(now);
+  }
+  resolveAuction(now){
+    if(this.leader){const p=this.player(this.leader);p.balance-=this.price;p.inventory.push(this.products[0]);}
+    this.history.push({type:'auction',playerId:this.leader,amount:this.price,product:this.products[0]});
+    this.auctionIndex++;
+    if(this.auctionIndex<this.auctionTotal)this.openAuction(now);
+    else{this.phase='build';this.deadline=now+90000;this.products=[];this.passed=[];}
+  }
+  resolveBuild(){
+    this.results=this.players.map(p=>{
+      const selected=p.inventory.filter(x=>(this.builds[p.id]??[]).includes(x.id));
+      const score=this.theme==='kahvalti'?scoreBreakfast(selected):this.theme==='bilgisayar'?scoreComputer(selected):scoreSoup(selected);
+      return {id:p.id,name:p.name,remaining:p.balance,selected,...score};
+    }).sort((a,b)=>b.points-a.points||b.remaining-a.remaining);
+    this.phase='results';this.deadline=null;
+  }
+  tick(now=Date.now()){
+    if(!this.deadline||now<this.deadline)return;
+    if(this.phase==='auction')this.resolveAuction(now);
+    else if(this.phase==='build')this.resolveBuild();
+  }
+  snapshot(viewerId){
+    const visible=value=>this.phase==='results'?value:JSON.parse(JSON.stringify(value,(key,v)=>key==='points'?undefined:v));
+    return {theme:this.theme,rulesVersion:2,auctionVersion:1,auctionIndex:this.auctionIndex,auctionTotal:this.auctionTotal,
+      phase:this.phase,deadline:this.deadline,serverNow:Date.now(),products:visible(this.products),players:visible(this.players),
+      history:visible(this.history),price:this.price,leader:this.leader,passed:[...this.passed],ownBuild:this.builds[viewerId]??[],finished:[...this.finished],results:this.results};
   }
 }

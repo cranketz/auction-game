@@ -1,5 +1,7 @@
 # Auction Game — Tam Proje Planı ve Uygulama Raporu
 
+> Güncel alışveriş kuralı: temel/gizli dağıtım kaldırıldı; bütün ürünler tek bütçeli 90 saniyelik açık artırmadadır. +1 doğrudan teklif verir, herkesin pası turu kapatır. [Güncel kurallar](./docs/ACIK_ARTIRMA_KURALLARI.md). Önceki aşama/süre açıklamaları tarihsel tasarımı anlatır; tema uyum ve puanlama kuralları korunur.
+
 Tarih: 4 Ekim 2026  
 Dil: Türkçe  
 Durum: Geliştirme öncesi plan; uygulama henüz yapılmadı.  

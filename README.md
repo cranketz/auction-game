@@ -13,7 +13,7 @@ http://127.0.0.1:3000 adresini açın. İkinci oyuncu farklı bir tarayıcı pro
 
 Tek başına oynamak için ana ekrandaki “Tek başına pratik yap” alanından 1–3 botlu özel oda kurun. Botlar bütün temalarda normal kurallarla oynar. Ayrıntılar: [Botlu pratik](docs/BOTLU_PRATIK.md).
 
-Yeni odalarda teklif süresi 20, 30 veya 45 saniye (varsayılan 30), kombinasyon süresi 90 saniyedir. Mobilde oda/oyuncu bilgileri, ürün ipuçları ve önizleme açılır alanlardan görülebilir. [Mobil düzen ve süreler](docs/MOBIL_DUZEN_VE_SURELER.md).
+Bütün ürünler tek bütçeyle açık artırmada alınır. Her tur 90 saniye başlar; “+1” düğmesi mevcut fiyatın 1 TL üstünü hemen gönderir. Herkes pas geçince son teklif sahibi alır; hiç teklif yoksa ürün satılmadan geçilir. Bakiye ve alınan ürünler üstte görünür. Kombinasyon süresi 90 saniyedir. [Açık artırma kuralları](docs/ACIK_ARTIRMA_KURALLARI.md).
 
 ## Vercel yayını
 - GitHub: https://github.com/cranketz/auction-game
@@ -29,4 +29,4 @@ Oturum cookie'si HttpOnly, SameSite=Strict ve yayında Secure'dür; 7 gün geçe
 
 Kahvaltı 16 temel, 16 ekstra model ve ikili/üçlü uyum puanlaması içerir. Puanlar yalnızca sonuçta gösterilir. Bilgisayar 30 kurgusal model, soket/bellek/kasa/güç uyumluluğu ve kısmi katkı hesabı içerir. Çorba 24 malzeme ve sunucuda saklanan sabit olumlu/olumsuz ilişkilerle puanlanır. Kullanılan ilişkiler sonuçta açılır. Kurallar: docs/TEMA_KURALLARI.md. Bağlantı durumu 30 saniyelik toleransla gösterilir. Bağlantısı kopan oda sahibinin yönetimi 45 saniye sonra çevrimiçi oyuncuya devredilir; geri dönmesi yönetimi geri almaz. Lobide 2 dakika bağlantısız kalan oyuncu çıkarılır. Devam eden maçta ürünleri ve yeri korunur; aynı tarayıcı oturumuyla geri dönebilir. Temizlik ve yönetim devri bir sonraki sunucu isteğinde uygulanır.
 
-Plan: PROJE_PLANI.md. 48 test; servis testi eşzamanlı teklifler ve saklanıp geri yüklenen tam maç akışını kapsar. Ayrıntılı arayüz incelemesi: [UI raporu](docs/UI_INCELEME_RAPORU.md). Ücretsiz planların kullanım kotaları Vercel ve Neon panelinden izlenmelidir.
+Plan: PROJE_PLANI.md. 55 test; servis testi eşzamanlı teklifler ve saklanıp geri yüklenen tam maç akışını kapsar. Ayrıntılı arayüz incelemesi: [UI raporu](docs/UI_INCELEME_RAPORU.md). Ücretsiz planların kullanım kotaları Vercel ve Neon panelinden izlenmelidir.

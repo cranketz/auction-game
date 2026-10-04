@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BREAKFAST,scoreBreakfast} from '../src/breakfast.js';
-import {Match} from '../src/engine.js';
+import {LegacyMatch as Match} from '../src/engine.js';
 const meal=(...names)=>names.map(name=>{const p=BREAKFAST.find(p=>p.name===name);assert.ok(p,name);return {...p,id:name};});
 test('catalog has 16 basic and 16 extras with unique identities and hints',()=>{
  assert.equal(BREAKFAST.filter(x=>x.basic).length,16);assert.equal(BREAKFAST.filter(x=>!x.basic).length,16);

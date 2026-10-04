@@ -50,17 +50,18 @@ test('five independent six-player rooms allocate every round without cross-room 
   }
   const extra=await perform(store,{method:'POST',path:'session',b:{name:'Fazla oda'},now,ip:'extra'});
   await assert.rejects(call(extra,'create',{theme:'kahvalti',budget:100,seconds:20}),/kapasitesi/);
-  for(let round=0;round<4;round++){
+  for(let round=0;round<36;round++){
     for(const players of groups){
-      const room=await call(players[0],'state',{},'GET');const ids=room.value.match.products.map(p=>p.id);assert.equal(ids.length,6);
-      await Promise.all(players.map(p=>call(p,'basic',{amount:0,preference:ids})));
+      const room=await call(players[0],'state',{},'GET'),productId=room.value.match.products[0].id;
+      assert.equal(room.value.match.auctionIndex,round);
+      await call(players[round%6],'bid',{productId,increment:true});
+      await Promise.all(players.map(p=>call(p,'pass',{productId})));
     }
-    now+=20000;
-    for(const players of groups)for(const p of players)await call(p,'state',{},'GET');
+    now++;
   }
-  for(const players of groups){const room=await call(players[0],'state',{},'GET');assert.equal(room.value.match.phase,'extra');assert.ok(room.value.match.players.every(p=>p.inventory.length===4));}
-  for(let i=0;i<12;i++){now+=20000;for(const players of groups)for(const p of players)await call(p,'state',{},'GET');}
   for(const players of groups){
+    const state=await call(players[0],'state',{},'GET');assert.equal(state.value.match.phase,'build');
+    assert.ok(state.value.match.players.every(p=>p.balance===94&&p.inventory.length===6));
     await Promise.all(players.map(p=>call(p,'build',{ids:[],finish:true})));
     const room=await call(players[0],'state',{},'GET');assert.equal(room.value.match.phase,'results');assert.equal(room.value.match.results.length,6);
   }

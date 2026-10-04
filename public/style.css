@@ -556,3 +556,53 @@ tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
 @media (max-width: 420px) {
   .bid-controls > button[data-add] { grid-column: span 2; }
 }
+
+/* Auction-only matches: visible player balances and purchases above the lot. */
+.room-duration { display: grid; align-content: center; gap: 8px; font-size: 14px; }
+.room-duration strong { padding: 12px 14px; min-height: 48px; border-radius: 11px; background: var(--soft); }
+.player-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 8px; margin: 12px 0; align-items: start; }
+.player-summary { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); min-width: 0; overflow-wrap: anywhere; }
+.player-summary.self { background: var(--soft); border-color: #b8cbb0; }
+.player-summary > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; font-size: 14px; }
+.player-summary b { color: var(--green); white-space: nowrap; }
+.auction-player-state { display: block; color: var(--gold); font-size: 12px; }
+.auction-player-state:empty { display: none; }
+.latest-purchase { margin: 4px 0 0; font-size: 12px; }
+.player-summary details { font-size: 12px; }
+.player-summary summary { min-height: 44px; padding: 10px 0; color: var(--green); }
+.player-summary ul { padding-left: 16px; margin: 0; }
+.player-summary li { margin: 4px 0; }
+.lobby-players { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; font-size: 14px; }
+.lobby-players span { padding: 8px 12px; background: var(--soft); border-radius: 8px; }
+.auction-progress ol { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.auction-actions { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin: 16px 0 10px; }
+.auction-actions > button { min-height: 52px; }
+.auction-actions span { font-size: 13px; }
+.pass-help { font-size: 13px; margin-bottom: 12px; }
+.custom-bid summary { min-height: 44px; padding: 10px 0; font-size: 14px; color: var(--green); }
+.custom-bid-controls { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+@media (min-width: 900px) { #app[data-screen='auction'] #stage { max-width: 880px; margin: 20px auto; } }
+@media (max-width: 700px) {
+  .player-overview { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px; margin: 8px 0; }
+  .player-summary { padding: 8px 10px; }
+  .player-summary > div { font-size: 12px; }
+  .player-summary > div strong { flex-basis: 100%; }
+  .latest-purchase { font-size: 11px; }
+  .player-summary summary { padding: 10px 0 6px; }
+  .auction-player-state { font-size: 11px; }
+  .auction-actions { grid-template-columns: 2fr 1fr; gap: 6px; margin-top: 12px; }
+  .auction-actions button { padding: 10px; font-size: 14px; }
+  .auction-actions span { font-size: 11px; }
+  .custom-bid-controls { grid-template-columns: minmax(0,1fr) auto; }
+  .custom-bid-controls button { padding: 10px; font-size: 14px; }
+  .pass-help { font-size: 12px; }
+  .player-overview:has(.player-summary:nth-child(5)) { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .player-overview:has(.player-summary:nth-child(5)) .player-summary { padding: 6px; }
+  .player-overview:has(.player-summary:nth-child(5)) .player-summary > div { font-size: 11px; }
+  #app[data-screen='auction'] .room-header { flex-wrap: nowrap; }
+  #app[data-screen='auction'] .room-header > div:first-child { flex: 1 1 80px; }
+  #app[data-screen='auction'] .room-header h1 { font-size: 22px; }
+  #app[data-screen='auction'] .room-header .room-meta { display: none; }
+  #app[data-screen='auction'] .room-header .room-code { padding: 4px; font-size: 12px; gap: 6px; }
+  #app[data-screen='auction'] #copyCode { min-height: 44px; padding: 8px; font-size: 12px; }
+}

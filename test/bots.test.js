@@ -25,12 +25,12 @@ test('bot observation and decisions ignore secret bids, points and future pools'
  const {store,call}=await practice();await call('start');
  const room=Object.values((await store.read()).data.rooms)[0],match=restoreMatch(room.match),bot=match.players.find(p=>p.bot);
  const before=botObservation(match,bot.id),plan=planBot(before,'same-seed');
- match.bids[match.players[0].id]={amount:99,preference:match.products.map(p=>p.id).reverse()};
+ match.bids={[match.players[0].id]:{amount:99,preference:match.products.map(p=>p.id).reverse()}};
  match.computerKits=[['secret-future']];match.hiddenSoupRelations={a:999};
  for(const p of match.products)Object.defineProperty(p,'points',{get(){throw Error('Private points accessed');}});
  assert.deepEqual(botObservation(match,bot.id),before);assert.deepEqual(planBot(botObservation(match,bot.id),'same-seed'),plan);
  assert.ok(!JSON.stringify(before).includes('points'));assert.ok(!('bids' in before));
- assert.ok(plan.amount>=0&&plan.amount<=bot.basic);assert.deepEqual(new Set(plan.preference),new Set(match.products.map(p=>p.id)));
+ assert.ok(plan.cap>=0&&plan.cap<=bot.balance);assert.equal(before.auctionQueue,undefined);
 });
 test('computer bot uses public socket and RAM compatibility; build excludes duplicates',()=>{
  const inventory=[{id:'cpu',modelId:'cpu',group:'İşlemci',socket:'A',watts:65}];
@@ -41,16 +41,14 @@ test('computer bot uses public socket and RAM compatibility; build excludes dupl
  const ids=planBot({...o,phase:'build',inventory:items},'seed').ids;
  assert.equal(new Set(ids.map(id=>items.find(p=>p.id===id).group)).size,ids.length);assert.ok(ids.length<=10);
 });
-test('bot plans survive reload; simultaneous polls apply a sealed bid once',async()=>{
+test('bot plans survive reload; concurrent polls apply one public auction action',async()=>{
  const {store,call}=await practice('kahvalti',3);await call('start');
  const saved=await store.read();store.data=JSON.parse(JSON.stringify(saved.data));
- const plans=Object.values(store.data.rooms)[0].botState;
- await Promise.all(Array.from({length:20},()=>call('state',{},5000,'GET')));
+ await Promise.all(Array.from({length:10},()=>call('state',{},5000,'GET')));
  const room=Object.values((await store.read()).data.rooms)[0],match=restoreMatch(room.match);
- assert.equal(Object.keys(match.bids).length,3);assert.equal(store.version,saved.version+1);
- for(const bot of match.players.filter(p=>p.bot)){assert.equal(match.bids[bot.id].amount,plans[bot.id].amount);assert.equal(room.botState[bot.id].done,true);}
- const state=(await call('state',{},5001,'GET')).value;
- assert.equal(state.botState,undefined);assert.equal(state.match.bids,undefined);assert.equal(state.match.ownBid,null);
+ assert.equal(match.bidCount,3);assert.equal(match.price,3);assert.equal(store.version,saved.version+3);
+ assert.equal((await call('state',{},5001,'GET')).value.botState,undefined);
+ assert.equal(match.auctionIndex,0);assert.equal(match.passed.length,0);
 });
 test('practice bots cannot become host; orphaned lobbies and active leave release room capacity',async()=>{
  const {store,user,call}=await practice('corba',2);
@@ -61,15 +59,11 @@ test('practice bots cannot become host; orphaned lobbies and active leave releas
  await call('create',{theme:'corba',budget:50,seconds:20,practice:true,bots:1},120002);await call('start',{},120002);await call('leave',{},120003);
  assert.equal(Object.keys((await store.read()).data.rooms).length,0);assert.equal((await call('state',{},120004,'GET')).value,null);
 });
-test('bot sealed plans may settle at deadline; extras never retroactively extend an expired auction',async()=>{
- const {store,call}=await practice();let state=(await call('start')).value,now=state.match.deadline;
- state=(await call('state',{},now,'GET')).value;
- assert.ok(state.match.history[0].allocation.some(a=>a.playerId!==state.host&&a.amount>0));
- while(state.match.phase==='basic'){now=state.match.deadline;state=(await call('state',{},now,'GET')).value;}
- const before=Object.values((await store.read()).data.rooms)[0].botState;
- now=state.match.deadline;state=(await call('state',{},now,'GET')).value;
- assert.equal(state.match.history.at(-1).type,'extra');assert.equal(state.match.history.at(-1).amount,0);
- assert.ok(Object.values(before).every(plan=>plan.cap>=0));
+test('bots do not bid or pass retroactively at an expired auction',async()=>{
+ const {call}=await practice();const started=(await call('start')).value;
+ const state=(await call('state',{},started.match.deadline,'GET')).value;
+ assert.equal(state.match.history[0].type,'auction');assert.equal(state.match.history[0].amount,0);assert.equal(state.match.history[0].playerId,null);
+ assert.equal(state.match.auctionIndex,1);
 });
 test('all three themes finish with one or three bots under normal budgets and persisted deadlines',async()=>{
  for(const theme of ['kahvalti','bilgisayar','corba'])for(const bots of [1,3]){
@@ -77,13 +71,13 @@ test('all three themes finish with one or three bots under normal budgets and pe
   while(state.match.phase!=='results'&&iterations++<1200){
    now+=1000;state=(await call('state',{},now,'GET')).value;
    const m=state.match,own=m.players.find(p=>p.id===state.host);
-   assert.ok(m.players.every(p=>p.basic>=0&&p.basic<=100&&p.extra>=0&&p.extra<=100));
-   if(m.phase==='basic'&&!m.ownBid)state=(await call('basic',{amount:0,preference:m.products.map(p=>p.id)},now)).value;
+   assert.ok(m.players.every(p=>p.balance>=0&&p.balance<=100));
+   if(m.phase==='auction'&&!m.passed.includes(state.host))state=(await call('pass',{productId:m.products[0].id},now)).value;
    if(m.phase==='build'&&!m.finished.includes(state.host))state=(await call('build',{ids:[],finish:true},now)).value;
   }
   assert.equal(state.match.phase,'results',theme+' '+bots);assert.equal(state.match.results.length,bots+1);
   assert.ok(state.match.results.filter(r=>r.id!==state.host).every(r=>r.selected.length>0&&Number.isFinite(r.points)));
   const replay=(await call('replay',{},now)).value;assert.ok(!replay.match);assert.equal(replay.players.filter(p=>p.bot&&p.ready).length,bots);
-  assert.equal((await call('start',{},now)).value.match.phase,'basic');await call('leave',{},now);assert.equal(Object.keys((await store.read()).data.rooms).length,0);
+  assert.equal((await call('start',{},now)).value.match.phase,'auction');await call('leave',{},now);assert.equal(Object.keys((await store.read()).data.rooms).length,0);
  }
 });

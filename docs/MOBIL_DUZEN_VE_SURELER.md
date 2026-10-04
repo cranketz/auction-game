@@ -1,5 +1,7 @@
 # Mobil düzen ve süreler · 4 Ekim 2026
 
+> Güncel alışveriş kuralı: temel/gizli dağıtım kaldırıldı; bütün ürünler tek bütçeli 90 saniyelik açık artırmadadır. +1 doğrudan teklif verir, herkesin pası turu kapatır. [Güncel kurallar](./ACIK_ARTIRMA_KURALLARI.md). Önceki aşama/süre açıklamaları tarihsel tasarımı anlatır; tema uyum ve puanlama kuralları korunur.
+
 Kullanıcı geri bildirimi: mobil ekran kalabalık, tur süreleri kısa.
 
 ## Uygulanan düzen
