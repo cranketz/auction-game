@@ -51,3 +51,6 @@ Doğrulama: 29 test geçti. Canlı bilgisayar ve çorba iki oyunculu maçları s
 
 ## Ürün kataloğu
 86 ürün için giriş gerektirmeyen, tema/grup/ad filtreli katlanabilir katalog eklendi. Yalnızca kimlik, ad, grup, ipucu ve temel/ekstra bilgileri sunulur; puanlar ve gizli ilişki tabloları sunulmaz. Katalog maç durumundan bağımsızdır. 29 test geçti; tarayıcıda bilgisayar ve anakart filtreleri kontrol edildi. Oyuncu denemeleri ertelendi, denge değerleri korunuyor.
+
+## Maç akışı ve sonuçlar
+Aşama şeridi, temel/ekstra toplamları ve kalan tur sayısı eklendi. Bağlantı kesilmesi ve yeniden bağlanma bildirimi gösterilir. Sonuçlar kişisel sıralama, paylaşılan birinciler, para eşitlik kuralı ve odadan ayrılma sunar. Yeniden oyna aynı ayarlarla lobiye döner; oyuncular tekrar hazır olur. Beş adımlı kısa rehber eklendi. 31 otomatik test geçti. Oyuncu denemeleri ertelenmeye devam ediyor.

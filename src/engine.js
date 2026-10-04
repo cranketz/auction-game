@@ -109,7 +109,7 @@ export class Match {
   }
   snapshot(viewerId) {
     const visible=value=>this.phase==='results'?value:JSON.parse(JSON.stringify(value,(key,v)=>key==='points'?undefined:v));
-    return {theme:this.theme,rulesVersion:this.contentVersion??1, phase:this.phase, deadline:this.deadline, serverNow:Date.now(), round:this.round, extraIndex:this.extraIndex, products:visible(this.products),
+    return {theme:this.theme,rulesVersion:this.contentVersion??1, basicTotal:THEMES[this.theme].groups.length, extraTotal:this.players.length*2, phase:this.phase, deadline:this.deadline, serverNow:Date.now(), round:this.round, extraIndex:this.extraIndex, products:visible(this.products),
       players:visible(this.players), priority:this.priority, history:visible(this.history), price:this.price, leader:this.leader,
       ownBid:this.phase === 'basic' ? this.bids[viewerId] ?? null : null, ownBuild:this.builds[viewerId] ?? [], finished:[...this.finished], results:this.results};
   }
