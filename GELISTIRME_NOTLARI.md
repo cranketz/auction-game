@@ -2,7 +2,7 @@
 
 ## Mevcut durum
 
-Yerel prototip oynanabilir; üretim yayını henüz hazır değildir. Kullanıcının arayüz kararları: kısa bütçe etiketi, oda kodu kopyalama, oyuncu sayısı uyarısı, maç öncesi ürün puanlarının gizlenmesi, teklif taslağını değiştiren artı/eksi düğmeleri, kartlı temel tercih sırası, faza göre bakiye, oda sahibinde ayrı hazır düğmesi olmaması.
+Küçük ölçekli ilk internet yayını Vercel auction-game projesinde hazırlandı. Maç/oturum kalıcılığı ayrı Neon Free veritabanında; kısa aralıklı HTTP durum güncellemesi ve sürüm karşılaştırmalı atomik yazma kullanılır. Hedef oyun.redodesign.art; ana site korunur. Kullanıcının arayüz kararları: kısa bütçe etiketi, oda kodu kopyalama, oyuncu sayısı uyarısı, maç öncesi ürün puanlarının gizlenmesi, teklif taslağını değiştiren artı/eksi düğmeleri, kartlı temel tercih sırası, faza göre bakiye, oda sahibinde ayrı hazır düğmesi olmaması.
 
 ## Tartışılacak geliştirmeler
 
@@ -21,8 +21,17 @@ Bu liste öneridir; kullanıcıyla konuşulmadan yeni oyun kuralı olarak uygula
 
 Depo bağlantısı belirlendikten sonra tamamlanan her anlamlı güncellemede ilgili kontroller çalıştırılır, değişiklikler gözden geçirilir, açıklayıcı commit oluşturulur ve aynı depoya push edilir. Hata veren veya yarım deneyler tamamlanmış güncelleme gibi gönderilmez. Push sonucu doğrulanır; son yanıtta kısa commit bilgisi verilir. Kimlik bilgileri, yerel veriler ve yedekler gönderilmez.
 
-Bu işlem mevcut çalışma sırasında yapılır; sohbet dışında kendiliğinden dosya izleme veya zamanlanmış görev oluşturulmaz. Yeni çalışma oturumlarında bu dosya çalışma tercihini kaydeder. GitHub yüklemesi oyun sitesinin otomatik yayınlanması anlamına gelmez.
+Bu işlem mevcut çalışma sırasında yapılır; sohbet dışında kendiliğinden dosya izleme veya zamanlanmış görev oluşturulmaz. Yeni çalışma oturumlarında bu dosya çalışma tercihini kaydeder. Vercel auction-game projesi GitHub main dalına bağlıdır. Main push sonrasında otomatik üretim yayını oluşur; GitHub kontrolleri ve canlı yayın sonucu doğrulanmalıdır.
 
 ## GitHub bağlantısı
 
 Depo: https://github.com/cranketz/auction-game (herkese açık). Yerel main dalı origin/main dalını takip eder. Git kimliği yalnızca bu depoda cranketz ve GitHub noreply adresi olarak ayarlandı. İlk gönderim doğrulandı. Tamamlanan güncellemelerde kontrollerden sonra commit ve git push uygulanır.
+
+## İlk internet yayını · 4 Ekim 2026
+
+Vercel: https://vercel.com/cranketzs-projects/auction-game
+Geçici canlı adres: https://auction-game-zeta.vercel.app
+Veritabanı: auction-game-db, Neon Free, Frankfurt. Sırlar .env.local içinde ve Vercel Production ortamındadır; Git tarafından hariç tutulur.
+DNS Cloudflare tarafından yönetilir. Vercel hedef kaydı: CNAME oyun → 3cf574130d948699.vercel-dns-017.com, DNS only. Ana domain kayıtlarına dokunulmaz.
+
+17 test ve gerçek Neon üzerinde tam servis akışı geçti. Canlı API oturum/cookie/oda/durum/çıkış kontrolleri geçti. İki oyunculu canlı kontrol için node scripts/verify-live.mjs https://auction-game-zeta.vercel.app çalıştırılır; gerçek süreleri kullanır ve test odasını sonunda kapatır.

@@ -25,7 +25,7 @@ export async function perform(store,{method,path,token,b={},ip='local',now=Date.
       const token=randomBytes(24).toString('hex'),user={id:randomUUID(),name,expires:now+7*86400000};data.sessions[token]=user;
       return {changed:true,value:{id:user.id,name:user.name},token};
     }
-    const user=data.sessions[token];if(!user||user.expires<=now)return {changed,status:401,value:{error:'Önce giriş yapın.'}};
+    const user=Object.hasOwn(data.sessions,token)?data.sessions[token]:null;if(!user||user.expires<=now)return {changed,status:401,value:{error:'Önce giriş yapın.'}};
     if(method==='GET'&&path==='rooms')return {changed,value:Object.values(data.rooms).filter(r=>r.public).map(r=>({code:r.code,count:r.players.length,settings:r.settings,started:!!r.match}))};
     if(method==='GET'&&path==='state')return {changed,value:view(roomFor(data,user.id),user.id)};
     if(method!=='POST')return {changed,status:404,value:{error:'Bulunamadı.'}};
@@ -35,7 +35,8 @@ export async function perform(store,{method,path,token,b={},ip='local',now=Date.
       if(!THEMES[b.theme]||![50,100,150].includes(b.budget)||![8,12,20].includes(b.seconds))throw Error('Geçersiz ayarlar.');
       const code=randomBytes(4).toString('hex').toUpperCase();room={code,host:user.id,public:b.public!==false,settings:{theme:b.theme,budget:b.budget,seconds:b.seconds},players:[],match:null,updatedAt:now};join(data,room,user);data.rooms[code]=room;
     }else if(path==='join'||path==='quick'){
-      room=path==='join'?data.rooms[String(b.code).toUpperCase()]:Object.values(data.rooms).find(r=>r.public&&!r.match&&r.players.length<6);
+      const code=String(b.code).toUpperCase();
+      room=path==='join'?(Object.hasOwn(data.rooms,code)?data.rooms[code]:null):Object.values(data.rooms).find(r=>r.public&&!r.match&&r.players.length<6);
       if(!room)throw Error(path==='join'?'Oda bulunamadı.':'Uygun oda yok; yeni oda kurabilirsiniz.');join(data,room,user);
     }else{
       if(!room)throw Error('Odada değilsiniz.');const match=restoreMatch(room.match);

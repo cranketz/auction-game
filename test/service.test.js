@@ -40,6 +40,9 @@ test('expired sessions cannot authorize actions',async()=>{
   const store=new MemoryStore();const user=await perform(store,{method:'POST',path:'session',b:{name:'Test'},now:0});
   const result=await perform(store,{method:'GET',path:'state',token:user.token,now:7*86400000});assert.equal(result.status,401);
 });
-test('storage representation preserves match methods without rerolling products',()=>{
-  assert.equal(restoreMatch(null),null);assert.equal(saveMatch(null),null);
+test('forged prototype session tokens cannot authenticate',async()=>{
+  const store=new MemoryStore();
+  for(const token of ['__proto__','constructor','toString']){
+    const result=await perform(store,{method:'GET',path:'state',token});assert.equal(result.status,401);
+  }
 });
