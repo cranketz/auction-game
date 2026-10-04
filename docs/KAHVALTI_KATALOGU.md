@@ -102,9 +102,9 @@ Aşağıdaki çiftler +4 getirir. Bir çift menüde yalnızca bir kez sayılır.
 
 ## 4. Örnek sonuç hesapları
 
-Klasik masa: Simit + beyaz peynir + haşlanmış yumurta + çay + siyah zeytin + domates. Taban 40; temel tamlık 12; iki ekstra grubu 4; altı ikili eşleşme 24; klasik masa 8. Toplam **88**.
+Klasik masa: Simit + beyaz peynir + haşlanmış yumurta + çay + siyah zeytin + domates. Taban 40; temel tamlık 12; iki ekstra grubu 4; beş ikili eşleşme 20; klasik masa 8. Toplam **84**.
 
-Tatlı masa: Bazlama + lor + sade omlet + süt + bal + tereyağı. Taban 40; tamlık 12; iki ekstra grubu 4; altı ikili eşleşme 24; tatlı bazlama 8. Toplam **88**.
+Tatlı masa: Bazlama + lor + sade omlet + süt + bal + tereyağı. Taban 40; tamlık 12; iki ekstra grubu 4; beş ikili eşleşme 20; tatlı bazlama 8. Toplam **84**.
 
 Rastgele masa: Simit + kaşar + haşlanmış yumurta + süt. Taban 32; tamlık 12; ikili veya üçlü bonus yok. Toplam **44**.
 
